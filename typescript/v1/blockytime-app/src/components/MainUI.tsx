@@ -21,6 +21,7 @@ export const MainUI: React.FC<MainUIProps> = () => {
   const timeTableContainerRef = useRef<HTMLDivElement>(null);
   const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const dispatch = useAppDispatch();
   // keys of selectedBlocks are things like
@@ -38,11 +39,11 @@ export const MainUI: React.FC<MainUIProps> = () => {
     // The scroll event handler can be simplified or removed if not needed
   };
 
-  const handleTypeSelect = (typeUid: number, projectUid?: number | null) => {
+  const handleTypeSelect = async (typeUid: number, projectUid?: number | null) => {
     setSelectedTypeUid(typeUid);
     setSelectedProjectUid(projectUid || null);
 
-    blockService.updateBlocks(Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
+    const blocksToUpsert = Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
       return {
         date: keyToTimestamp(key),
         type_: {
@@ -54,11 +55,54 @@ export const MainUI: React.FC<MainUIProps> = () => {
         comment: '',
         operation: 'upsert',
       }
-    }));
+    });
+    try {
+      const result = await blockService.updateBlocks(blocksToUpsert);
+      if (result) {
+        dispatch(clearSelection());
+        // TODO: refresh the time table
+      }
+    } catch (error) {
+      console.error('Error upserting blocks:', error);
+    }
   };
   
   const handleClearSelection = () => {
     dispatch(clearSelection());
+  };
+  
+  const handleDeleteBlocks = async () => {
+    if (selectedBlockCount === 0) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Create an array of block models with delete operation
+      const blocksToDelete = Object.entries(selectedBlocks)
+        .filter(([_, value]) => !!value)
+        .map(([key, _]) => {
+          return {
+            date: keyToTimestamp(key),
+            comment: '',
+            operation: 'delete' as 'delete',
+          };
+        });
+      
+      // Call the API to delete the blocks
+      await blockService.updateBlocks(blocksToDelete);
+      
+      // Clear the selection after successful deletion
+      dispatch(clearSelection());
+      
+      // Optionally, refresh the time table to show the updated state
+      // This could be handled by a context or state management to trigger a refresh
+      
+    } catch (error) {
+      console.error('Error deleting blocks:', error);
+      // Optionally show an error message to the user
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -82,7 +126,22 @@ export const MainUI: React.FC<MainUIProps> = () => {
       {selectedBlockCount > 0 && (
         <div className="selection-info-fixed">
           <span>{selectedBlockCount} blocks selected</span>
-          <button onClick={handleClearSelection}>Clear Selection</button>
+          <div className="selection-buttons">
+            <button 
+              className="delete-button" 
+              onClick={handleDeleteBlocks}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </button>
+            <button 
+              className="clear-button" 
+              onClick={handleClearSelection}
+              disabled={isDeleting}
+            >
+              Clear Selection
+            </button>
+          </div>
         </div>
       )}
       
