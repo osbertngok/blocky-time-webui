@@ -1,5 +1,5 @@
 import React from 'react';
-import { TimeTable } from './components/TimeTable';
+import { MainUI } from './components/MainUI';
 import { ServiceProvider } from './contexts/ServiceContext';
 import './App.css';
 
@@ -11,7 +11,7 @@ function App() {
           <h1>BlockyTime</h1>
         </header>
         <main>
-          <TimeTable />
+          <MainUI />
         </main>
       </div>
     </ServiceProvider>

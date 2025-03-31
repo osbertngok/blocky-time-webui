@@ -5,15 +5,18 @@ import './TimeTable.css';
 
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date
+  containerRef?: React.RefObject<HTMLDivElement>;
 }
 
-export const TimeTable: React.FC<TimeTableProps> = ({ initialDate = new Date() }) => {
+export const TimeTable: React.FC<TimeTableProps> = ({ 
+  initialDate = new Date(),
+  containerRef
+}) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [blocks, setBlocks] = useState<Record<string, BlockModel[]>>({});
   const [loading, setLoading] = useState(false);
   const [visibleDates, setVisibleDates] = useState<string[]>([]);
   const blockService = useBlockService();
-  const tableRef = useRef<HTMLDivElement>(null);
 
   // Format date as YYYY-MM-DD
   const formatDateString = (date: Date): string => {
@@ -83,47 +86,26 @@ export const TimeTable: React.FC<TimeTableProps> = ({ initialDate = new Date() }
     }
   };
 
-  // Handle scroll to load more data
-  const handleScroll = () => {
-    if (!tableRef.current) return;
-    
-    const { scrollTop, clientHeight, scrollHeight } = tableRef.current;
-    
-    // If scrolled near the top, load more dates before
-    if (scrollTop < 200) {
-      const firstVisibleDate = new Date(visibleDates[0]);
-      const prevDate = new Date(firstVisibleDate);
-      prevDate.setDate(prevDate.getDate() - 1);
-      fetchBlocksForDate(prevDate);
-      
-      // Update visible dates
-      setVisibleDates(prev => [formatDateString(prevDate), ...prev.slice(0, 2)]);
-    }
-    
-    // If scrolled near the bottom, load more dates after
-    if (scrollHeight - scrollTop - clientHeight < 200) {
-      const lastVisibleDate = new Date(visibleDates[visibleDates.length - 1]);
-      const nextDate = new Date(lastVisibleDate);
-      nextDate.setDate(nextDate.getDate() + 1);
-      fetchBlocksForDate(nextDate);
-      
-      // Update visible dates
-      setVisibleDates(prev => [...prev.slice(-2), formatDateString(nextDate)]);
-    }
-  };
-
   // Initial data loading
   useEffect(() => {
     const dates = getDateRange(currentDate);
     prefetchBlocks(dates);
     
     // Set initial visible dates (current date and ±1 day)
+    const yesterday = new Date(currentDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const tomorrow = new Date(currentDate);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
     const initialVisibleDates = [
-      formatDateString(new Date(currentDate.getTime() - 86400000)), // yesterday
+      formatDateString(yesterday),
       formatDateString(currentDate),
-      formatDateString(new Date(currentDate.getTime() + 86400000))  // tomorrow
+      formatDateString(tomorrow)
     ];
-    setVisibleDates(initialVisibleDates);
+    
+    // Ensure no duplicates
+    setVisibleDates([...new Set(initialVisibleDates)]);
   }, [currentDate]);
 
   // Convert decimal color to CSS hex color
@@ -256,15 +238,69 @@ export const TimeTable: React.FC<TimeTableProps> = ({ initialDate = new Date() }
     );
   };
 
+  // Set up scroll handling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef?.current) return;
+      
+      const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
+      
+      // If scrolled near the top, load more dates before
+      if (scrollTop < 200) {
+        const firstVisibleDate = new Date(visibleDates[0]);
+        const prevDate = new Date(firstVisibleDate);
+        prevDate.setDate(prevDate.getDate() - 1);
+        const prevDateStr = formatDateString(prevDate);
+        
+        // Only add if not already in the list
+        if (!visibleDates.includes(prevDateStr)) {
+          fetchBlocksForDate(prevDate);
+          
+          // Create a new array with unique dates
+          const newDates = [prevDateStr, ...visibleDates];
+          const uniqueDates = [...new Set(newDates)].slice(0, 5); // Limit to 5 dates to avoid too many
+          setVisibleDates(uniqueDates);
+        }
+      }
+      
+      // If scrolled near the bottom, load more dates after
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        const lastVisibleDate = new Date(visibleDates[visibleDates.length - 1]);
+        const nextDate = new Date(lastVisibleDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextDateStr = formatDateString(nextDate);
+        
+        // Only add if not already in the list
+        if (!visibleDates.includes(nextDateStr)) {
+          fetchBlocksForDate(nextDate);
+          
+          // Create a new array with unique dates
+          const newDates = [...visibleDates, nextDateStr];
+          const uniqueDates = [...new Set(newDates)].slice(-5); // Limit to 5 dates to avoid too many
+          setVisibleDates(uniqueDates);
+        }
+      }
+    };
+
+    // Add scroll event listener to the container
+    const container = containerRef?.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+    }
+
+    // Clean up
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [containerRef, visibleDates, blocks, fetchBlocksForDate, formatDateString]);
+
   return (
-    <div 
-      className="time-table-container" 
-      ref={tableRef}
-      onScroll={handleScroll}
-    >
+    <div className="time-table">
       {loading && <div className="loading-indicator">Loading...</div>}
-      <div className="time-table">
-        {visibleDates.map(dateStr => renderTimeBlocks(dateStr))}
+      <div className="time-blocks">
+        {[...new Set(visibleDates)].map(dateStr => renderTimeBlocks(dateStr))}
       </div>
     </div>
   );
