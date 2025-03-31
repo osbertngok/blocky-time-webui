@@ -2,7 +2,7 @@
 
 ## Background
 
-[BlockyTime](https://apps.apple.com/us/app/blockytime/id1086617993) is a pixelized time logger, developed by [@anniApp](https://weibo.com/anniApp). See also [another interview]([text](https://indiehacker.im/zuo-zi-ji-chan-pin-de-shen-du-yong-hu-zhuan-fang)).
+[BlockyTime](https://apps.apple.com/us/app/blockytime/id1086617993) is a pixelized time logger, developed by [@anniApp](https://weibo.com/anniApp). See also [another interview](https://indiehacker.im/zuo-zi-ji-chan-pin-de-shen-du-yong-hu-zhuan-fang).
 
 BlockyTime Web UI is a web application written in Python and TypeScript that allows you to view and edit the time blocks of the SQLite3 database generated and managed by the said app.
 
