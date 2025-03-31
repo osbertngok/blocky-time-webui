@@ -40,3 +40,8 @@
 .read-the-docs {
   color: #888;
 }
+
+.App {
+  height: 100vh;
+  overflow: hidden;
+}

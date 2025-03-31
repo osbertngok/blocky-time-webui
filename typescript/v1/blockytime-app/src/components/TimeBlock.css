@@ -1,0 +1,35 @@
+.time-block {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  margin-bottom: 1px;
+}
+
+.time-label {
+  width: 80px;
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.block-cells {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+.cell {
+  flex: 1;
+  height: 100%;
+  transition: background-color 0.2s;
+}
+
+.cell:hover {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.left {
+  border-right: 1px solid #fff;
+} 
