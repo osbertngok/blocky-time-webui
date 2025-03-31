@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blockytime"
+version = "0.3.0"
+description = "Blockytime"
+requires-python = ">=3.10"
+dependencies = [
+    "flask~=2.3.3",           # Use Flask 2.x which still has Markup
+    "flask-cors~=4.0.0",
+    "flasgger~=0.9.7",
+    "flask-swagger-ui~=4.11.1",
+    "sqlalchemy~=2.0.0",
+    "Pillow~=10.0.0",
+    "google-generativeai~=0.3.0",
+    "python-dotenv~=1.0.0",
+    "requests~=2.31.0",
+    "beautifulsoup4~=4.12.0",
+    "alembic~=1.13.0",
+    "xlsxwriter~=3.1.0",
+    "markupsafe~=2.1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy",
+    "pytest",
+    "ipython",
+    "types-requests",
+    "types-beautifulsoup4",
+    "types-Pillow",
+    "types-Flask-Cors"
+]
+
+[tool.setuptools]
+package-dir = {"" = "python"}
+packages = ["blockytime"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+packages = ["blockytime"]
+mypy_path = "python"
+
+[[tool.mypy.overrides]]
+module = "google.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "flasgger.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "flask_swagger_ui.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "xlsxwriter.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "--capture=no"
+log_cli = "true"
+log_cli_level = "debug"
+log_format = "%(asctime)s.%(msecs)03d %(name)s [%(levelname)s] [%(filename)s:%(lineno)s %(funcName)s] %(message)s"
+log_date_format = "%Y-%m-%dT%H:%M:%S"
