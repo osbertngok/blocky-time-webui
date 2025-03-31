@@ -4,6 +4,8 @@ import pytz
 from typing import Callable, Any, TypeVar, cast, List, Optional
 from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..dtos.block_dto import BlockDTO
+from ..dtos.type_dto import TypeDTO
+from ..dtos.project_dto import ProjectDTO
 from ..routes.decorators import RouteReturn, inject_blockservice
 
 
@@ -57,9 +59,32 @@ def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
     params: blocks (list of BlockDTO)
     """
     try:
-        blocks: Optional[List[BlockDTO]] = cast(Optional[List[BlockDTO]], request.json)
-        if not blocks:
-            return jsonify({'error': 'blocks is required'}), 400
+        if isinstance(request.json, list):            
+            blocks: List[BlockDTO] = []
+            for item in request.json:
+                if isinstance(item, dict):
+                    if 'date' in item and 'type_' in item and 'project' in item and 'comment' in item and 'operation' in item:
+                        if item['operation'] == 'upsert':
+                            if 'type_' in item and item['type_'] is not None and item['type_']['uid'] is None:
+                                return jsonify({'error': 'type_.uid is required for upsert operation if type_ is not None'}), 400
+                            if 'project' in item and item['project'] is not None and item['project']['uid'] is None:
+                                return jsonify({'error': 'project.uid is required for upsert operation if project is not None'}), 400
+                        blocks.append(BlockDTO(
+                            date=item['date'],
+                            type_=TypeDTO(uid=item['type_']['uid']),
+                            project=ProjectDTO(uid=item['project']['uid']) if 'project' in item and item['project'] is not None else None,
+                            comment=item['comment'],
+                            operation=item['operation']
+                        ))
+                    else:
+                        return jsonify({'error': 'invalid block'}), 400
+                else:
+                    return jsonify({'error': 'expecting list of blocks'}), 400
+
+            if not blocks:
+                return jsonify({'error': 'blocks is required'}), 400
+        else:
+            return jsonify({'error': 'expecting list of blocks'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     

@@ -35,4 +35,5 @@ export interface BlockModel extends BaseModel {
     type_?: TypeModel;  // Optional type
     project?: ProjectModel;  // Optional project
     comment: string;
+    operation?: 'upsert' | 'delete';
 }

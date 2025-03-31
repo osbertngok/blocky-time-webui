@@ -3,6 +3,7 @@ import { BlockModel } from '../models/block';
 export interface BlockServiceInterface {
   getBlocks(startDate: Date, endDate: Date): Promise<BlockModel[]>;
   getBlocksByDateString(startDateStr: string, endDateStr: string): Promise<BlockModel[]>;
+  updateBlocks(blocks: BlockModel[]): Promise<boolean>;
 }
 
 export class BlockService implements BlockServiceInterface {
@@ -43,6 +44,33 @@ export class BlockService implements BlockServiceInterface {
       return result.data as BlockModel[];
     } catch (error) {
       console.error('Error fetching blocks:', error);
+      throw error;
+    }
+  }
+
+  async updateBlocks(blocks: BlockModel[]): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/blocks`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(blocks),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating blocks:', error);
       throw error;
     }
   }

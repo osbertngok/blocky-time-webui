@@ -4,6 +4,7 @@ from .base_dto import BaseDTO
 
 @dataclass
 class GoalDTO(BaseDTO):
+    uid: Optional[int] = None
     type: int = 0
     hours: Optional[float] = None
     duration_type: Optional[int] = None
@@ -23,6 +24,7 @@ class GoalDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
+            'uid': self.uid,
             'type': self.type,
             'hours': self.hours,
             'duration_type': self.duration_type,

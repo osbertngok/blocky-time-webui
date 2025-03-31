@@ -6,6 +6,7 @@ from .project_dto import ProjectDTO
 
 @dataclass
 class TypeDTO(BaseDTO):
+    uid: Optional[int] = None
     category: Optional[CategoryDTO] = None
     name: str = ''
     color: Optional[int] = None

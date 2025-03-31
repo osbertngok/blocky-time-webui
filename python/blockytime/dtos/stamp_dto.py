@@ -4,6 +4,7 @@ from .base_dto import BaseDTO
 
 @dataclass
 class StampDTO(BaseDTO):
+    uid: Optional[int] = None
     stamper_uid: Optional[int] = None
     interval: Optional[float] = None
     block_data: Optional[bytes] = None
@@ -15,6 +16,7 @@ class StampDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
+            'uid': self.uid,
             'stamper_uid': self.stamper_uid,
             'interval': self.interval,
             'block_data': self.block_data.hex() if self.block_data else None,

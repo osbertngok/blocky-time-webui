@@ -4,6 +4,7 @@ from .base_dto import BaseDTO
 
 @dataclass
 class StamperDTO(BaseDTO):
+    uid: Optional[int] = None
     name: str = ''
     color: Optional[int] = None
     fav: Optional[bool] = None
@@ -18,6 +19,7 @@ class StamperDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
+            'uid': self.uid,
             'name': self.name,
             'color': self.color,
             'fav': self.fav,

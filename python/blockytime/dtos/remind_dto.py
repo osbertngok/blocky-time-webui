@@ -4,6 +4,7 @@ from .base_dto import BaseDTO
 
 @dataclass
 class RemindDTO(BaseDTO):
+    uid: Optional[int] = None
     key: str = ''
     block_date: Optional[int] = None
     alert_type: Optional[int] = None
@@ -24,6 +25,7 @@ class RemindDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
+            'uid': self.uid,
             'key': self.key,
             'block_date': self.block_date,
             'alert_type': self.alert_type,

@@ -4,6 +4,7 @@ from .base_dto import BaseDTO
 
 @dataclass
 class ProjectDTO(BaseDTO):
+    uid: Optional[int] = None
     name: str = ''
     abbr: str = ''
     latin: str = ''

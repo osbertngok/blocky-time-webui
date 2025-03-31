@@ -5,9 +5,16 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearSelection } from '../store/selectionSlice';
 import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
+import { useBlockService } from '../contexts/ServiceContext';
+import { BlockModel } from '../models/block';
 
 interface MainUIProps {
   // Props can be added later if needed
+}
+
+const keyToTimestamp = (key: string): number => {
+  const [year, month, day, hour, minute] = key.split('-');
+  return new Date(`${year}-${month}-${day}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`).getTime() / 1000;
 }
 
 export const MainUI: React.FC<MainUIProps> = () => {
@@ -16,7 +23,13 @@ export const MainUI: React.FC<MainUIProps> = () => {
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   
   const dispatch = useAppDispatch();
+  // keys of selectedBlocks are things like
+  // 2025-03-28-2-0
+  // 2025-03-28-2-15
+  // 2025-03-28-2-30
+  // 2025-03-28-2-45
   const { selectedBlocks } = useAppSelector(state => state.selection);
+  const blockService = useBlockService();
   
   // Count selected blocks
   const selectedBlockCount = Object.keys(selectedBlocks).length;
@@ -28,6 +41,20 @@ export const MainUI: React.FC<MainUIProps> = () => {
   const handleTypeSelect = (typeUid: number, projectUid?: number | null) => {
     setSelectedTypeUid(typeUid);
     setSelectedProjectUid(projectUid || null);
+
+    blockService.updateBlocks(Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
+      return {
+        date: keyToTimestamp(key),
+        type_: {
+          uid: typeUid
+        },
+        project: projectUid ? {
+          uid: projectUid
+        } : null,
+        comment: '',
+        operation: 'upsert',
+      }
+    }));
   };
   
   const handleClearSelection = () => {

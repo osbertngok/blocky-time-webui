@@ -1,3 +1,3 @@
 export interface BaseModel {
-    uid: number;
+    uid?: number;
 } 
