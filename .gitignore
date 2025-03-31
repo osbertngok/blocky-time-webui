@@ -166,3 +166,6 @@ python/blockytime/data/*.db
 
 # Dynamic data directories
 python/blockytime/data/dynamic/
+
+# Mac
+.DS_Store
