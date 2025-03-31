@@ -6,11 +6,15 @@ import './TimeTable.css';
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date
   containerRef?: React.RefObject<HTMLDivElement>;
+  selectedTypeUid?: number | null;
+  selectedProjectUid?: number | null;
 }
 
 export const TimeTable: React.FC<TimeTableProps> = ({ 
   initialDate = new Date(),
-  containerRef
+  containerRef,
+  selectedTypeUid,
+  selectedProjectUid
 }) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [blocks, setBlocks] = useState<Record<string, BlockModel[]>>({});

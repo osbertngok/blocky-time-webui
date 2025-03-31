@@ -10,16 +10,18 @@ interface MainUIProps {
 
 export const MainUI: React.FC<MainUIProps> = () => {
   const timeTableContainerRef = useRef<HTMLDivElement>(null);
-  const [selectedType, setSelectedType] = useState<TypeModel | null>(null);
+  const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
+  const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     // The scroll event will be triggered on the container
     console.log('Container scrolled');
   };
 
-  const handleTypeSelect = (type: TypeModel) => {
-    setSelectedType(type);
-    console.log('Selected type:', type);
+  const handleTypeSelect = (typeUid: number, projectUid?: number | null) => {
+    setSelectedTypeUid(typeUid);
+    setSelectedProjectUid(projectUid || null);
+    console.log('Selected type:', typeUid, 'Selected project:', projectUid);
   };
 
   return (
@@ -31,7 +33,8 @@ export const MainUI: React.FC<MainUIProps> = () => {
       >
         <TimeTable 
           containerRef={timeTableContainerRef}
-          selectedType={selectedType}
+          selectedTypeUid={selectedTypeUid}
+          selectedProjectUid={selectedProjectUid}
         />
       </div>
       <div className="type-selector-container">
