@@ -8,3 +8,9 @@ class BlockServiceInterface(Protocol):
         Get blocks for a given date range
         """
         ...
+
+    def update_blocks(self, blocks: list[BlockDTO]) -> bool:
+        """
+        Update blocks
+        """
+        ...

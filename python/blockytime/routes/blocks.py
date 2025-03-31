@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 import pytz
-from typing import Callable, Any, TypeVar, cast, List
+from typing import Callable, Any, TypeVar, cast, List, Optional
 from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..dtos.block_dto import BlockDTO
 from ..routes.decorators import RouteReturn, inject_blockservice
@@ -12,8 +12,6 @@ import logging
 log = logging.getLogger(__name__)
 
 bp = Blueprint('blocks', __name__)
-
-
 
 @bp.route('/api/v1/blocks', methods=['GET'])
 @inject_blockservice
@@ -51,3 +49,24 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             "data": None,
             "error": str(e)
         }), 500
+    
+@bp.route('/api/v1/blocks', methods=['PUT'])
+@inject_blockservice
+def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
+    """
+    params: blocks (list of BlockDTO)
+    """
+    try:
+        blocks: Optional[List[BlockDTO]] = cast(Optional[List[BlockDTO]], request.json)
+        if not blocks:
+            return jsonify({'error': 'blocks is required'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+    if block_service.update_blocks(blocks):
+        return jsonify({'message': 'Blocks updated successfully'}), 200
+    else:
+        return jsonify({'error': 'Failed to update blocks'}), 500
+            
+            
+
