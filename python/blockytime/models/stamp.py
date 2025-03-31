@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Float, LargeBinary, Text, Date, ForeignKey
+from sqlalchemy import Column, Integer, Float, LargeBinary, Text, ForeignKey
 from .base import Base
 
 class Stamp(Base):
@@ -9,6 +9,6 @@ class Stamp(Base):
     interval = Column(Float)
     block_data = Column(LargeBinary)
     reminds = Column(Text)
-    timestamp = Column(Date)
+    timestamp = Column(Integer)
     ext_i = Column(Integer)
     ext_t = Column(Text) 

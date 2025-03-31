@@ -18,8 +18,8 @@ from .services.di import ServiceProvider, FlaskWithServiceProvider
 from .routes import blocks
 from .log import ColoredFormatter
 from .routes.decorators import RouteReturn
-
-
+from .interfaces.blockserviceinterface import BlockServiceInterface
+from .services.blockservice import BlockService
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -40,20 +40,12 @@ log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from flask import Flask
 
-def load_config(app: Flask) -> None:
-
-    # client = get_genai_client()
-
-    TEST_USER_TOKEN = os.getenv('TEST_USER_TOKEN')
-    if not TEST_USER_TOKEN:
-        raise ValueError("TEST_USER_TOKEN environment variable is not set")
-    
+def load_config(app: Flask) -> None:    
     GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
     # Near the top with other environment variables
     BLOCKYTIME_SERVER_PORT = int(os.getenv('BLOCKYTIME_SERVER_PORT', '5001'))
     app.config = ConfigDict(root_path=app.config.root_path, defaults=app.config)
-    app.config['TEST_USER_TOKEN'] = TEST_USER_TOKEN
     app.config['BLOCKYTIME_SERVER_PORT'] = BLOCKYTIME_SERVER_PORT
     app.config['GOOGLE_API_KEY'] = GOOGLE_API_KEY
 
@@ -138,6 +130,7 @@ def create_app() -> Flask:
     
     app = FlaskWithServiceProvider(__name__, service_provider=service_provider)
     load_config(app)
+    service_provider.register(BlockServiceInterface, BlockService(engine))
     service_provider.register(ConfigDict, app.config) 
     
     # Define static file routes

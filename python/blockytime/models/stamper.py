@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, Boolean, Date
+from sqlalchemy import Column, Integer, Text, Boolean
 from .base import Base
 
 class Stamper(Base):
@@ -9,7 +9,7 @@ class Stamper(Base):
     color = Column(Integer)
     fav = Column(Boolean)
     priority = Column(Integer)
-    timestamp = Column(Date)
+    timestamp = Column(Integer)
     sub_uids = Column(Text)
     group_number = Column(Integer)
     group_name = Column(Text)

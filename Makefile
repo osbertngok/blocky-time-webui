@@ -8,9 +8,9 @@ APP_NAME ?= blockytime
 UNAME_S := $(shell uname -s) # FIXME: This may fail on Windows
 
 define TEST_LIST_SCRIPT
-from testblockytime import test_blockytime
+from testblockytime import test_blockservice
 import inspect
-for classname, classobj in inspect.getmembers(test_blockytime):
+for classname, classobj in inspect.getmembers(test_blockservice):
     if classname.startswith("Test"):
         for name, obj in inspect.getmembers(classobj):
             if name.startswith("test_"):
@@ -94,10 +94,6 @@ run:
 	BLOCKYTIME_SERVER_PORT=${BLOCKYTIME_SERVER_PORT} \
 	.ve3/bin/python3 -m python.blockytime.server
 
-
-
-
-
 .PHONY: clean
 clean:
 	@git clean -fX .ve3/
@@ -111,9 +107,9 @@ test-list:
 .PHONY: test
 test:
 ifeq (${TESTNAME},)
-	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockytime.py
+	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockservice.py
 else
-	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockytime.py::${TESTNAME}
+	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockservice.py::${TESTNAME}
 endif	
 
 .PHONY: check

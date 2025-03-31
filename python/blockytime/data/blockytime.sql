@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS "Block" (
 	"uid"	integer NOT NULL,
-	"date"	date,
+	"date"	integer,
 	"type_uid"	integer DEFAULT 0,
 	"project_uid"	integer DEFAULT 0,
 	"comment"	text DEFAULT '',
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS "Stamp" (
 	"interval"	double,
 	"block_data"	blob,
 	"reminds"	text,
-	"timestamp"	date,
+	"timestamp"	integer,
 	"ext_i"	integer,
 	"ext_t"	text,
 	PRIMARY KEY("uid" AUTOINCREMENT)
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS "Stamper" (
 	"color"	integer,
 	"fav"	bool,
 	"priority"	integer,
-	"timestamp"	date,
+	"timestamp"	integer,
 	"sub_uids"	text,
 	"group_number"	integer,
 	"group_name"	text,

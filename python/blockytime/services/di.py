@@ -1,6 +1,10 @@
 from typing import Dict, Any, Type, TypeVar, cast
 from flask import Flask, g
 
+import logging
+
+log = logging.getLogger(__name__)
+
 # T is a TypeVar bound to object since Protocol can't be used as a bound
 T = TypeVar('T', bound=object)
 
@@ -13,12 +17,13 @@ class ServiceProvider:
 
     def register(self, interface: Type[T], implementation: Any) -> None:
         """Register an implementation for an interface"""
+        log.info(f"Registering {interface} with {implementation}")
         self._services[interface] = implementation
 
     def get(self, interface: Type[T]) -> T:
         """Get the implementation for an interface"""
         if interface not in self._services:
-            raise KeyError(f"No implementation registered for interface {interface}")
+            raise KeyError(f"No implementation registered for interface {interface}。 Registered interfaces: {self._services.keys()}")
         return cast(T, self._services[interface])
 
 def get_service_provider(app: "FlaskWithServiceProvider") -> ServiceProvider:
