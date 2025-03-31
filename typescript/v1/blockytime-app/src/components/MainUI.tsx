@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { TimeTable } from './TimeTable';
 import { TypeSelector } from './TypeSelector';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { clearSelection } from '../store/selectionSlice';
+import { clearSelection, triggerRefresh } from '../store/selectionSlice';
 import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceContext';
@@ -60,7 +60,8 @@ export const MainUI: React.FC<MainUIProps> = () => {
       const result = await blockService.updateBlocks(blocksToUpsert);
       if (result) {
         dispatch(clearSelection());
-        // TODO: refresh the time table
+        // Trigger a refresh of the time table
+        dispatch(triggerRefresh());
       }
     } catch (error) {
       console.error('Error upserting blocks:', error);
@@ -93,9 +94,8 @@ export const MainUI: React.FC<MainUIProps> = () => {
       
       // Clear the selection after successful deletion
       dispatch(clearSelection());
-      
-      // Optionally, refresh the time table to show the updated state
-      // This could be handled by a context or state management to trigger a refresh
+      // Trigger a refresh of the time table
+      dispatch(triggerRefresh());
       
     } catch (error) {
       console.error('Error deleting blocks:', error);

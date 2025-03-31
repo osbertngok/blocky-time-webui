@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BlockModel } from '../models/block';
 import { useBlockService } from '../contexts/ServiceContext';
 import './TimeTable.css';
@@ -33,19 +33,19 @@ export const TimeTable: React.FC<TimeTableProps> = ({
 
   // Add Redux hooks
   const dispatch = useAppDispatch();
-  const { selectedBlocks, isDragging } = useAppSelector(state => state.selection);
+  const { selectedBlocks, isDragging, refreshCounter } = useAppSelector(state => state.selection);
   
   // Add state for tracking mouse events
   const [isMouseDown, setIsMouseDown] = useState(false);
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Format date as YYYY-MM-DD
-  const formatDateString = (date: Date): string => {
+  const formatDateString = useCallback((date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };
+  }, []);
 
   // Get a range of dates (±10 days from current date)
   const getDateRange = (centerDate: Date): Date[] => {
@@ -72,12 +72,9 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     return dates;
   };
 
-  // Fetch blocks for a specific date
-  const fetchBlocksForDate = async (date: Date) => {
+  // Fetch blocks for a specific date - using useCallback to avoid dependency cycles
+  const fetchBlocksForDate = useCallback(async (date: Date) => {
     const dateStr = formatDateString(date);
-    
-    // Skip if we already have data for this date
-    if (blocks[dateStr]) return;
     
     try {
       setLoading(true);
@@ -98,7 +95,7 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [blockService, formatDateString]);
 
   // Prefetch blocks for a range of dates
   const prefetchBlocks = async (dates: Date[]) => {
@@ -128,6 +125,61 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     // Ensure no duplicates
     setVisibleDates([...new Set(initialVisibleDates)]);
   }, [currentDate]);
+
+  // Function to refresh all visible dates
+  const refreshVisibleDates = useCallback(() => {
+    console.log('Refreshing visible dates:', visibleDates);
+    
+    // Get current visible dates from state
+    const currentVisibleDates = [...visibleDates];
+    
+    // Fetch fresh data for all visible dates
+    currentVisibleDates.forEach(dateStr => {
+      const date = new Date(dateStr);
+      
+      // Use a direct fetch instead of the cached function to avoid dependency issues
+      const fetchDate = async () => {
+        try {
+          setLoading(true);
+          
+          // Create next day for end date
+          const nextDate = new Date(date);
+          nextDate.setDate(nextDate.getDate() + 1);
+          const endDateStr = formatDateString(nextDate);
+          
+          const fetchedBlocks = await blockService.getBlocksByDateString(
+            formatDateString(date), 
+            endDateStr
+          );
+          
+          // Update blocks with fresh data
+          setBlocks(prev => ({
+            ...prev,
+            [formatDateString(date)]: fetchedBlocks
+          }));
+        } catch (error) {
+          console.error(`Error refreshing blocks for ${formatDateString(date)}:`, error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchDate();
+    });
+  }, [visibleDates, blockService, formatDateString]);
+
+  // Add a ref to track the previous refresh counter value
+  const prevRefreshCounterRef = useRef(0);
+
+  // Add a new effect to listen for refresh events
+  useEffect(() => {
+    // Only refresh if the counter has actually changed and is greater than the previous value
+    if (refreshCounter > prevRefreshCounterRef.current) {
+      console.log('Refresh counter changed:', refreshCounter, 'Previous:', prevRefreshCounterRef.current);
+      refreshVisibleDates();
+      prevRefreshCounterRef.current = refreshCounter;
+    }
+  }, [refreshCounter, refreshVisibleDates]);
 
   // Convert decimal color to CSS hex color
   const getColorFromDecimal = (decimalColor?: number): string => {

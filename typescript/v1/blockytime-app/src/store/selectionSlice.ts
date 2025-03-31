@@ -24,12 +24,14 @@ interface SelectionState {
   selectedBlocks: Record<string, boolean>; // Map of block IDs to selection state
   dragStartBlock: TimeBlockId | null;
   isDragging: boolean;
+  refreshCounter: number; // Add a counter to trigger refreshes
 }
 
 const initialState: SelectionState = {
   selectedBlocks: {},
   dragStartBlock: null,
   isDragging: false,
+  refreshCounter: 0, // Initialize counter
 };
 
 export const selectionSlice = createSlice({
@@ -127,6 +129,10 @@ export const selectionSlice = createSlice({
       state.dragStartBlock = null;
     },
     
+    triggerRefresh: (state) => {
+      state.refreshCounter += 1;
+    },
+    
     clearSelection: (state) => {
       state.selectedBlocks = {};
       state.isDragging = false;
@@ -140,7 +146,8 @@ export const {
   startDragSelection, 
   updateDragSelection, 
   endDragSelection,
-  clearSelection
+  clearSelection,
+  triggerRefresh
 } = selectionSlice.actions;
 
 export default selectionSlice.reducer; 
