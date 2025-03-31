@@ -1,43 +1,37 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { BlockServiceInterface, BlockService } from '../services/blockservice';
+import React, { createContext, useContext } from 'react';
+import { BlockService, BlockServiceInterface } from '../services/blockservice';
+import { TypeService, TypeServiceInterface } from '../services/typeservice';
 
 interface ServiceContextType {
   blockService: BlockServiceInterface;
+  typeService: TypeServiceInterface;
 }
 
-// Create default services
-const defaultServices: ServiceContextType = {
-  blockService: new BlockService()
-};
+const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
-// Create context
-const ServiceContext = createContext<ServiceContextType>(defaultServices);
+export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const blockService = new BlockService();
+  const typeService = new TypeService();
 
-// Provider component
-interface ServiceProviderProps {
-  services?: Partial<ServiceContextType>;
-  children: ReactNode;
-}
-
-export const ServiceProvider: React.FC<ServiceProviderProps> = ({ 
-  services, 
-  children 
-}) => {
-  // Merge default services with provided services
-  const value = {
-    ...defaultServices,
-    ...services
-  };
-  
   return (
-    <ServiceContext.Provider value={value}>
+    <ServiceContext.Provider value={{ blockService, typeService }}>
       {children}
     </ServiceContext.Provider>
   );
 };
 
-// Hook for using services
-export const useServices = () => useContext(ServiceContext);
+export const useBlockService = (): BlockServiceInterface => {
+  const context = useContext(ServiceContext);
+  if (!context) {
+    throw new Error('useBlockService must be used within a ServiceProvider');
+  }
+  return context.blockService;
+};
 
-// Specific hooks for individual services
-export const useBlockService = () => useContext(ServiceContext).blockService; 
+export const useTypeService = (): TypeServiceInterface => {
+  const context = useContext(ServiceContext);
+  if (!context) {
+    throw new Error('useTypeService must be used within a ServiceProvider');
+  }
+  return context.typeService;
+}; 
