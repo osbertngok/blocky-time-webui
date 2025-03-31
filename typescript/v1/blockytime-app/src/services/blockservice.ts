@@ -1,18 +1,49 @@
-import BlockServiceInterface from '../interfaces/blockserviceinterface';
 import { BlockModel } from '../models/block';
-import IResponse from '../interfaces/responseinterface';
 
-class BlockService implements BlockServiceInterface {
+export interface BlockServiceInterface {
+  getBlocks(startDate: Date, endDate: Date): Promise<BlockModel[]>;
+  getBlocksByDateString(startDateStr: string, endDateStr: string): Promise<BlockModel[]>;
+}
 
-    private readonly API_URL: string;
+export class BlockService implements BlockServiceInterface {
+  private apiBaseUrl: string;
 
-    constructor(apiUrl: string) {
-        this.API_URL = apiUrl;
+  constructor(apiBaseUrl: string = '/api/v1') {
+    this.apiBaseUrl = apiBaseUrl;
+  }
+
+  async getBlocks(startDate: Date, endDate: Date): Promise<BlockModel[]> {
+    try {
+      const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const endDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      return this.getBlocksByDateString(startDateStr, endDateStr);
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+      throw error;
     }
+  }
 
-    async getBlocksAsync(startDate: string, endDate: string): Promise<BlockModel[]> {
-        const response = await fetch(`${this.API_URL}/blocks?start_date=${startDate}&end_date=${endDate}`);
-        const responseData: IResponse<BlockModel[]> = await response.json();
-        return responseData.data;
+  async getBlocksByDateString(startDateStr: string, endDateStr: string): Promise<BlockModel[]> {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/blocks?start_date=${startDateStr}&end_date=${endDateStr}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      return result.data as BlockModel[];
+    } catch (error) {
+      console.error('Error fetching blocks:', error);
+      throw error;
     }
+  }
 }

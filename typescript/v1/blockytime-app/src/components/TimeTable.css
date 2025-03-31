@@ -5,20 +5,144 @@
   background: #f5f5f5;
 }
 
+.loading-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
 .time-table {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.loading {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 10px 20px;
-  border-radius: 4px;
+.day-container {
+  margin-bottom: 40px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.date-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+}
+
+.date-month, .date-day, .date-weekday, .date-relative {
+  margin-right: 15px;
+}
+
+.date-month {
+  font-weight: bold;
+  color: #555;
+}
+
+.date-day {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.date-weekday {
+  color: #777;
+}
+
+.date-relative {
+  margin-left: auto;
+  color: #999;
+  font-style: italic;
+}
+
+.hour-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.hour-row:last-child {
+  border-bottom: none;
+}
+
+.hour-label {
+  width: 60px;
+  font-weight: bold;
+  text-align: right;
+  padding-right: 10px;
+  color: #555;
+}
+
+.quarter-hour-blocks {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+}
+
+.time-block {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.time-block.has-data {
+  cursor: pointer;
+}
+
+.minute {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.block-text {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.block-info {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 5px;
+  z-index: 10;
+  overflow: auto;
+}
+
+.time-block:hover .block-info {
+  display: block;
+}
+
+.type, .project, .comment {
+  margin-bottom: 3px;
+  font-size: 12px;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-style: italic;
 } 
