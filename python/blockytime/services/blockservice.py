@@ -32,17 +32,18 @@ class BlockService(BlockServiceInterface):
     def update_blocks(self, blocks: List[BlockDTO]) -> bool:
         try:
             with Session(self.engine) as session:
-                if all(block.operation in ['upsert', 'delete']  and block.type_ is not None for block in blocks):
+                if all(block.operation in ['upsert', 'delete']  and (block.operation == 'delete' or block.type_ is not None) for block in blocks):
                     # delete first, then add
                     # date is unique
                     for block in blocks:
-                        assert block.type_ is not None
+                        if block.operation == 'upsert':
+                            assert block.type_ is not None
                         if block.operation in ['delete', 'upsert']:
                             result: Result = session.execute(delete(Block).where(Block.date == block.date))
                             log.info(f"Deleted {result.rowcount} blocks for date {block.date}")
                     for block in blocks:
-                        assert block.type_ is not None
                         if block.operation == 'upsert':
+                            assert block.type_ is not None
                             type_uid = block.type_.uid
                             project_uid = block.project.uid if block.project is not None else None
                             type_ = session.query(Type).filter(Type.uid == type_uid).first()
