@@ -8,13 +8,14 @@ APP_NAME ?= blockytime
 UNAME_S := $(shell uname -s) # FIXME: This may fail on Windows
 
 define TEST_LIST_SCRIPT
-from testblockytime import test_blockservice
+from testblockytime import test_blockservice, test_typeservice
 import inspect
-for classname, classobj in inspect.getmembers(test_blockservice):
-    if classname.startswith("Test"):
-        for name, obj in inspect.getmembers(classobj):
-            if name.startswith("test_"):
-                print(f"make test TESTNAME={classname}::{name}")
+for module in [test_blockservice, test_typeservice]:
+    for classname, classobj in inspect.getmembers(module):
+        if classname.startswith("Test"):
+            for name, obj in inspect.getmembers(classobj):
+                if name.startswith("test_"):
+                    print(f"make test TESTFILE={module.__name__.split('.')[-1]}.py TESTNAME={classname}::{name}")
 endef
 export TEST_LIST_SCRIPT
 
@@ -106,10 +107,14 @@ test-list:
 
 .PHONY: test
 test:
+ifeq (${TESTFILE},)
+	TESTFILE=test_blockservice.py
+endif
+
 ifeq (${TESTNAME},)
-	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockservice.py
+	@.ve3/bin/python3 -m pytest -s python/testblockytime/${TESTFILE}
 else
-	@.ve3/bin/python3 -m pytest -s python/testblockytime/test_blockservice.py::${TESTNAME}
+	@.ve3/bin/python3 -m pytest -s python/testblockytime/${TESTFILE}::${TESTNAME}
 endif	
 
 .PHONY: check

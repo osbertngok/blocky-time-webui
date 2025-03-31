@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Text, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from .base import Base
 from ..dtos.block_dto import BlockDTO
 
@@ -10,11 +10,11 @@ class Block(Base):
     """
     __tablename__ = 'Block'
 
-    uid = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Integer)
-    type_uid = Column(Integer, ForeignKey('Type.uid'), nullable=True, default=0)
-    project_uid = Column(Integer, ForeignKey('Project.uid'), nullable=True, default=0)
-    comment = Column(Text, default='')
+    uid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    date: Mapped[int] = mapped_column(Integer)
+    type_uid: Mapped[int] = mapped_column(Integer, ForeignKey('Type.uid'), nullable=True, default=0)
+    project_uid: Mapped[int] = mapped_column(Integer, ForeignKey('Project.uid'), nullable=True, default=0)
+    comment: Mapped[str] = mapped_column(Text, default='')
 
     type_ = relationship('Type', foreign_keys=[type_uid])
     project = relationship('Project', foreign_keys=[project_uid])

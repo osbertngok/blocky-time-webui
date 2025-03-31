@@ -38,10 +38,16 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
         
     except ValueError:
         return jsonify({'error': 'Invalid date format'}), 400
+    
+    try:
+        blocks: List[BlockDTO] = block_service.get_blocks(start_date, end_date)
 
-    blocks: List[BlockDTO] = block_service.get_blocks(start_date, end_date)
-
-    return jsonify({
-        "data": [block.to_dict() for block in blocks],
-        "error": None
-    }), 200
+        return jsonify({
+            "data": [block.to_dict() for block in blocks],
+            "error": None
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "data": None,
+            "error": str(e)
+        }), 500

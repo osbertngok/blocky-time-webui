@@ -1,18 +1,19 @@
-from sqlalchemy import Column, Integer, Text, Boolean
+from sqlalchemy import Integer, Text, Boolean
+from sqlalchemy.orm import Mapped, mapped_column
 from .base import Base
 from ..dtos.project_dto import ProjectDTO
 class Project(Base):
     __tablename__ = 'Project'
 
-    uid = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, default='')
-    abbr = Column(Text, default='')
-    latin = Column(Text, default='')
-    acronym = Column(Text, default='')
-    hidden = Column(Boolean)
-    classify_uid = Column(Integer, default=0)
-    taglist = Column(Text, default='')
-    priority = Column(Integer) 
+    uid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(Text, default='')
+    abbr: Mapped[str] = mapped_column(Text, default='')
+    latin: Mapped[str] = mapped_column(Text, default='')
+    acronym: Mapped[str] = mapped_column(Text, default='')
+    hidden: Mapped[bool] = mapped_column(Boolean)
+    classify_uid: Mapped[int] = mapped_column(Integer, default=0)
+    taglist: Mapped[str] = mapped_column(Text, default='')
+    priority: Mapped[int] = mapped_column(Integer) 
 
     def to_dto(self) -> ProjectDTO:
         return ProjectDTO(

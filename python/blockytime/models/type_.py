@@ -1,20 +1,23 @@
-from sqlalchemy import Column, Integer, Text, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Text, Boolean, ForeignKey
+from sqlalchemy.orm import relationship, Mapped, mapped_column
 from .base import Base
+from .link import Link
 from ..dtos.type_dto import TypeDTO
 
 
 class Type(Base):
     __tablename__ = 'Type'
 
-    uid = Column(Integer, primary_key=True, autoincrement=True)
-    category_uid = Column(Integer, ForeignKey('Category.uid'), default=0)
-    name = Column(Text, default='')
-    color = Column(Integer)
-    hidden = Column(Boolean)
-    priority = Column(Integer)
+    uid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    category_uid: Mapped[int] = mapped_column(Integer, ForeignKey('Category.uid'), default=0)
+    name: Mapped[str] = mapped_column(Text, default='')
+    color: Mapped[int] = mapped_column(Integer)
+    hidden: Mapped[bool] = mapped_column(Boolean)
+    priority: Mapped[int] = mapped_column(Integer)
 
     category = relationship('Category')
+
+    projects = relationship('Project', secondary=Link.__table__)
 
     def to_dto(self) -> TypeDTO:
         return TypeDTO(
@@ -23,5 +26,6 @@ class Type(Base):
             color=self.color,
             hidden=self.hidden,
             priority=self.priority,
-            category=self.category.to_dto() if self.category else None
+            category=self.category.to_dto() if self.category else None,
+            projects=[project.to_dto() for project in self.projects] if self.projects else None
             )

@@ -1,23 +1,24 @@
-from sqlalchemy import Column, Integer, Text, Boolean, Float, String, ForeignKey
+from sqlalchemy import Integer, Text, Boolean, Float, String, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column
 from .base import Base
 
 class Remind(Base):
     __tablename__ = 'Remind'
 
-    uid = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(Text, nullable=False, default='')
-    block_date = Column(Integer)
-    alert_type = Column(Integer)
-    alert_offset = Column(Integer)
-    ring_index = Column(Integer)
-    alert_msg = Column(Text, default='')
-    type_uid = Column(Integer, ForeignKey('Type.uid'))
-    project_uid = Column(Integer, ForeignKey('Project.uid'))
-    place_uid = Column(Integer)
-    person_uids = Column(String)
-    comment = Column(Text)
-    repeat = Column(Integer)
-    state = Column(Boolean)
-    ext_i = Column(Integer)
-    ext_t = Column(Text, default='')
-    ext_d = Column(Float) 
+    uid: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    key: Mapped[str] = mapped_column(Text, nullable=False, default='')
+    block_date: Mapped[int] = mapped_column(Integer)
+    alert_type: Mapped[int] = mapped_column(Integer)
+    alert_offset: Mapped[int] = mapped_column(Integer)
+    ring_index: Mapped[int] = mapped_column(Integer)
+    alert_msg: Mapped[str] = mapped_column(Text, default='')
+    type_uid: Mapped[int] = mapped_column(Integer, ForeignKey('Type.uid'))
+    project_uid: Mapped[int] = mapped_column(Integer, ForeignKey('Project.uid'))
+    place_uid: Mapped[int] = mapped_column(Integer)
+    person_uids: Mapped[str] = mapped_column(String)
+    comment: Mapped[str] = mapped_column(Text)
+    repeat: Mapped[int] = mapped_column(Integer)
+    state: Mapped[bool] = mapped_column(Boolean)
+    ext_i: Mapped[int] = mapped_column(Integer)
+    ext_t: Mapped[str] = mapped_column(Text, default='')
+    ext_d: Mapped[float] = mapped_column(Float) 

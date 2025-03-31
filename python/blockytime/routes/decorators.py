@@ -4,6 +4,7 @@ from flasgger import swag_from as _swag_from
 from flask import Response as FlaskResponse, current_app
 from ..services.di import get_service_provider, FlaskWithServiceProvider
 from ..interfaces.blockserviceinterface import BlockServiceInterface
+from ..interfaces.typeserviceinterface import TypeServiceInterface
 
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]
@@ -28,4 +29,13 @@ def inject_blockservice(f: Callable[..., R]) -> Callable[..., R]:
         service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
         service = service_provider.get(BlockServiceInterface) # type: ignore
         return f(block_service=service, *args, **kwargs)
+    return wrapper
+
+def inject_typeservice(f: Callable[..., R]) -> Callable[..., R]:
+    """Inject type service as named argument"""
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> R:
+        service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
+        service = service_provider.get(TypeServiceInterface) # type: ignore
+        return f(type_service=service, *args, **kwargs)
     return wrapper
