@@ -146,4 +146,15 @@
   padding: 40px;
   color: #999;
   font-style: italic;
+}
+
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(33, 150, 243, 0.3); /* Light blue with transparency */
+  pointer-events: none; /* Allow clicks to pass through */
+  z-index: 10;
 } 

@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BlockModel } from '../models/block';
 import { useBlockService } from '../contexts/ServiceContext';
 import './TimeTable.css';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { 
+  TimeBlockId, 
+  formatTimeBlockId, 
+  toggleBlockSelection, 
+  startDragSelection, 
+  updateDragSelection, 
+  endDragSelection 
+} from '../store/selectionSlice';
 
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date
@@ -22,6 +31,14 @@ export const TimeTable: React.FC<TimeTableProps> = ({
   const [visibleDates, setVisibleDates] = useState<string[]>([]);
   const blockService = useBlockService();
 
+  // Add Redux hooks
+  const dispatch = useAppDispatch();
+  const { selectedBlocks, isDragging } = useAppSelector(state => state.selection);
+  
+  // Add state for tracking mouse events
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Format date as YYYY-MM-DD
   const formatDateString = (date: Date): string => {
     const year = date.getFullYear();
@@ -168,6 +185,81 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     return { month, day, weekday, daysAgo };
   };
 
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Handle mouse/touch events for time blocks
+  const handleBlockMouseDown = (blockId: TimeBlockId) => {
+    setIsMouseDown(true);
+    
+    // Set a timeout to detect long press
+    longPressTimeoutRef.current = setTimeout(() => {
+      dispatch(startDragSelection(blockId));
+    }, 200); // 200ms threshold for long press
+  };
+  
+  const handleBlockMouseMove = (blockId: TimeBlockId) => {
+    if (isDragging && isMouseDown) {
+      dispatch(updateDragSelection(blockId));
+    }
+  };
+  
+  const handleBlockMouseUp = (blockId: TimeBlockId) => {
+    setIsMouseDown(false);
+    
+    // Clear the long press timeout
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+    
+    if (isDragging) {
+      dispatch(endDragSelection());
+    } else {
+      // If not dragging, it was a simple click - toggle selection
+      dispatch(toggleBlockSelection(blockId));
+    }
+  };
+  
+  const handleBlockMouseLeave = () => {
+    // Only clear if not dragging
+    if (!isDragging) {
+      setIsMouseDown(false);
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
+    }
+  };
+  
+  // Add a global mouse up handler to catch mouse releases outside blocks
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        dispatch(endDragSelection());
+      }
+      setIsMouseDown(false);
+      if (longPressTimeoutRef.current) {
+        clearTimeout(longPressTimeoutRef.current);
+        longPressTimeoutRef.current = null;
+      }
+    };
+
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('touchend', handleGlobalMouseUp);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('touchend', handleGlobalMouseUp);
+    };
+  }, [dispatch, isDragging]);
+
   // Render a single time block cell
   const renderTimeBlock = (dateStr: string, hour: number, minute: number) => {
     const blocksByTime = getBlocksByTime(dateStr);
@@ -178,13 +270,61 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     const blockText = block?.project?.abbr || '';
     const backgroundColor = getColorFromDecimal(block?.type_?.color);
     
+    const blockId: TimeBlockId = { dateStr, hour, minute };
+    const formattedBlockId = formatTimeBlockId(blockId);
+    const isSelected = !!selectedBlocks[formattedBlockId];
+    
     return (
       <div 
         key={`${dateStr}-${key}`} 
-        className={`time-block ${block ? 'has-data' : ''}`}
+        className={`time-block ${block ? 'has-data' : ''} ${isSelected ? 'selected' : ''}`}
         style={{
-          backgroundColor
+          backgroundColor,
+          position: 'relative'
         }}
+        onMouseDown={(e) => {
+          e.stopPropagation();
+          handleBlockMouseDown(blockId);
+        }}
+        onMouseMove={(e) => {
+          e.stopPropagation();
+          handleBlockMouseMove(blockId);
+        }}
+        onMouseUp={(e) => {
+          e.stopPropagation();
+          handleBlockMouseUp(blockId);
+        }}
+        onMouseLeave={(e) => {
+          handleBlockMouseLeave();
+        }}
+        // Add touch events for mobile
+        onTouchStart={(e) => {
+          e.stopPropagation();
+          handleBlockMouseDown(blockId);
+        }}
+        onTouchMove={(e) => {
+          // Get touch position and find the element at that position
+          const touch = e.touches[0];
+          const element = document.elementFromPoint(touch.clientX, touch.clientY);
+          if (element) {
+            // Extract block ID from the element if possible
+            const dataAttributes = element.getAttribute('data-block-id');
+            if (dataAttributes) {
+              const [touchDateStr, touchHour, touchMinute] = dataAttributes.split('-');
+              const touchBlockId = {
+                dateStr: touchDateStr,
+                hour: parseInt(touchHour),
+                minute: parseInt(touchMinute)
+              };
+              handleBlockMouseMove(touchBlockId);
+            }
+          }
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          handleBlockMouseUp(blockId);
+        }}
+        data-block-id={`${dateStr}-${hour}-${minute}`}
       >
         <div className="minute">{minute}</div>
         {blockText && <div className="block-text">{blockText}</div>}
@@ -194,6 +334,9 @@ export const TimeTable: React.FC<TimeTableProps> = ({
             <div className="project">{block.project?.name || 'No Project'}</div>
             {block.comment && <div className="comment">{block.comment}</div>}
           </div>
+        )}
+        {isSelected && (
+          <div className="selection-overlay"></div>
         )}
       </div>
     );
