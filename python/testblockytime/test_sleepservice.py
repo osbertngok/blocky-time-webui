@@ -38,24 +38,29 @@ class TestSleepService:
         import numpy as np
 
         # Extract sleep durations
-        start_of_days_tuple = [(stat.date, ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0) for stat in sleep_stats if ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0 > 20.0]
-        
+        sime_day_tuple = [(stat.date, ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0, ((stat.end_time - 4 * 3600) % (24 * 3600)) / 3600.0 + 12.0) for stat in sleep_stats]
+        # Filtering
+        sime_day_tuple = [(date, start_hour, end_hour) for date, start_hour, end_hour in sime_day_tuple if start_hour > 20.0 and end_hour > 24.0 + 3.0]
         # Sort by date
-        start_of_days_tuple.sort(key=lambda x: x[0])
+        sime_day_tuple.sort(key=lambda x: x[0])
         
         # Separate dates and hours
-        dates = np.array([x[0] for x in start_of_days_tuple])
-        hours = np.array([x[1] for x in start_of_days_tuple])
+        dates = np.array([x[0] for x in sime_day_tuple])
+        start_hours = np.array([x[1] for x in sime_day_tuple])
+        end_hours = np.array([x[2] for x in sime_day_tuple])
         
-        # Calculate 30-day moving average
-        window_size = 30
-        moving_avg = np.convolve(hours, np.ones(window_size)/window_size, mode='valid')
+        # Calculate 30-day moving averages
+        window_size = 120
+        start_moving_avg = np.convolve(start_hours, np.ones(window_size)/window_size, mode='valid')
+        end_moving_avg = np.convolve(end_hours, np.ones(window_size)/window_size, mode='valid')
         moving_avg_dates = dates[window_size-1:]  # Align dates with moving average
         
         # Create the plot
         plt.figure(figsize=(12, 6))
-        plt.plot(dates, hours, 'b.', alpha=0.3, label='Daily Start Time')
-        plt.plot(moving_avg_dates, moving_avg, 'r-', linewidth=2, label='30-Day Moving Average')
+        plt.plot(dates, start_hours, 'b.', alpha=0.3, label='Daily Start Time')
+        plt.plot(dates, end_hours, 'g.', alpha=0.3, label='Daily End Time')
+        plt.plot(moving_avg_dates, start_moving_avg, 'r-', linewidth=2, label=f'{window_size}-Day Moving Average (Start)')
+        plt.plot(moving_avg_dates, end_moving_avg, 'm-', linewidth=2, label=f'{window_size}-Day Moving Average (End)')
         
         # Convert days since 1970 to years for x-axis labels, starting from 2017
         base_date = datetime(1970, 1, 1)
@@ -77,9 +82,9 @@ class TestSleepService:
         y_labels = [f"{int(tick%24):02d}:00" if tick >= 24 else f"{int(tick):02d}:00" for tick in y_ticks]
         plt.yticks(y_ticks, y_labels)
         
-        plt.title('Sleep Start Time and 30-Day Moving Average')
+        plt.title('Sleep Start/End Times and 30-Day Moving Averages')
         plt.xlabel('Year')
-        plt.ylabel('Start Time')
+        plt.ylabel('Time')
         plt.grid(True)
         plt.legend()
         plt.tight_layout()
