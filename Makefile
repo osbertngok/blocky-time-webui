@@ -8,9 +8,9 @@ APP_NAME ?= blockytime
 UNAME_S := $(shell uname -s) # FIXME: This may fail on Windows
 
 define TEST_LIST_SCRIPT
-from testblockytime import test_blockservice, test_typeservice
+from testblockytime import test_blockservice, test_typeservice, test_sleepservice
 import inspect
-for module in [test_blockservice, test_typeservice]:
+for module in [test_blockservice, test_typeservice, test_sleepservice]:
     for classname, classobj in inspect.getmembers(module):
         if classname.startswith("Test"):
             for name, obj in inspect.getmembers(classobj):
