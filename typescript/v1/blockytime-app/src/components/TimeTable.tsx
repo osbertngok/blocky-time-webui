@@ -39,6 +39,9 @@ export const TimeTable: React.FC<TimeTableProps> = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Add state for current time
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   // Format date as YYYY-MM-DD
   const formatDateString = useCallback((date: Date): string => {
     const year = date.getFullYear();
@@ -312,6 +315,42 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     };
   }, [dispatch, isDragging]);
 
+  // Add effect for updating current time
+  useEffect(() => {
+    // Update immediately
+    setCurrentTime(new Date());
+
+    // Update every 30 seconds
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 30000); // 30000ms = 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Function to render time indicator
+  const renderTimeIndicator = (dateStr: string, hour: number) => {
+    const now = currentTime;
+    const today = formatDateString(now);
+    
+    // Only show indicator for current date and hour
+    if (dateStr !== today || now.getHours() !== hour) {
+      return null;
+    }
+
+    const minutes = now.getMinutes();
+    const percentage = (minutes / 60) * 100;
+
+    return (
+      <div 
+        className="current-time-indicator"
+        style={{
+          left: `${percentage}%`
+        }}
+      />
+    );
+  };
+
   // Render a single time block cell
   const renderTimeBlock = (dateStr: string, hour: number, minute: number) => {
     const blocksByTime = getBlocksByTime(dateStr);
@@ -425,6 +464,7 @@ export const TimeTable: React.FC<TimeTableProps> = ({
           <div className="hour-label">{hourLabel}:00</div>
           <div className="quarter-hour-blocks">
             {quarterHourBlocks}
+            {renderTimeIndicator(dateStr, hour)}
           </div>
         </div>
       );

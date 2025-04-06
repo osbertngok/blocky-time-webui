@@ -87,6 +87,17 @@
   display: flex;
   flex: 1;
   gap: 2px;
+  position: relative;
+}
+
+.current-time-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: red;
+  z-index: 20;
+  pointer-events: none;
 }
 
 .time-block {
