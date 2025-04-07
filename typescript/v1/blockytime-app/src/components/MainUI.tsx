@@ -7,8 +7,7 @@ import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceContext';
 import { useConfigService } from '../contexts/ServiceContext';
-import { BlockModel } from '../models/block';
-import { BlockyTimeConfig } from '../models/config';
+import { BlockyTimeConfig } from '../models/blockytimeconfig';
 
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
