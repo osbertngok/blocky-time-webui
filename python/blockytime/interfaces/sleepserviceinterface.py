@@ -1,8 +1,11 @@
 from datetime import date
-from blockytime.dtos.sleep_dto import SleepStatsDTO
 from typing import Protocol
+
+from blockytime.dtos.sleep_dto import SleepStatsDTO
+
 
 class SleepServiceInterface(Protocol):
 
-    def get_sleep_stats(self, start_date: date, end_date: date) -> list[SleepStatsDTO]:
-        ...
+    def get_sleep_stats(
+        self, start_date: date, end_date: date
+    ) -> list[SleepStatsDTO]: ...

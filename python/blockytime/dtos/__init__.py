@@ -13,17 +13,17 @@ from .trend_history_dto import TrendHistoryDTO
 from .type_dto import TypeDTO
 
 __all__ = [
-    'BaseDTO',
-    'BlockDTO',
-    'CategoryDTO',
-    'ConfigDTO',
-    'DBInfoDTO',
-    'GoalDTO',
-    'LinkDTO',
-    'ProjectDTO',
-    'RemindDTO',
-    'StampDTO',
-    'StamperDTO',
-    'TrendHistoryDTO',
-    'TypeDTO',
-] 
+    "BaseDTO",
+    "BlockDTO",
+    "CategoryDTO",
+    "ConfigDTO",
+    "DBInfoDTO",
+    "GoalDTO",
+    "LinkDTO",
+    "ProjectDTO",
+    "RemindDTO",
+    "StampDTO",
+    "StamperDTO",
+    "TrendHistoryDTO",
+    "TypeDTO",
+]

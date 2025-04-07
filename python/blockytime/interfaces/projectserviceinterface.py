@@ -1,6 +1,7 @@
 from typing import Protocol
-from datetime import datetime
+
 from blockytime.dtos.project_dto import ProjectDTO
+
 
 class ProjectServiceInterface(Protocol):
     def get_projects(self) -> list[ProjectDTO]:

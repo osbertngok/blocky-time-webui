@@ -1,9 +1,9 @@
-from blockytime.interfaces.projectserviceinterface import ProjectServiceInterface
 from blockytime.dtos.project_dto import ProjectDTO
-from datetime import datetime
+from blockytime.interfaces.projectserviceinterface import ProjectServiceInterface
+from blockytime.models.project import Project
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
-from blockytime.models.project import Project
+
 
 class ProjectService(ProjectServiceInterface):
     def __init__(self, engine: Engine):

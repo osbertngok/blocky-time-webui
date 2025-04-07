@@ -1,14 +1,17 @@
-from typing import Callable, TypeVar, cast, Any, Dict, Union, Tuple
 from functools import wraps
+from typing import Any, Callable, Dict, Tuple, TypeVar, Union, cast
+
 from flasgger import swag_from as _swag_from
-from flask import Response as FlaskResponse, current_app
-from ..services.di import get_service_provider, FlaskWithServiceProvider
+from flask import Response as FlaskResponse
+from flask import current_app
+
 from ..interfaces.blockserviceinterface import BlockServiceInterface
-from ..interfaces.typeserviceinterface import TypeServiceInterface
 from ..interfaces.configserviceinterface import ConfigServiceInterface
+from ..interfaces.typeserviceinterface import TypeServiceInterface
+from ..services.di import FlaskWithServiceProvider, get_service_provider
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 def swag_from(specs: Dict[str, Any] | str) -> Callable[[F], F]:
@@ -16,35 +19,52 @@ def swag_from(specs: Dict[str, Any] | str) -> Callable[[F], F]:
         @wraps(f)
         def wrapped(*args: Any, **kwargs: Any) -> Any:
             return _swag_from(specs)(f)(*args, **kwargs)
+
         return cast(F, wrapped)
-    return decorator 
+
+    return decorator
 
 
-R = TypeVar('R', bound=RouteReturn, covariant=True)
+R = TypeVar("R", bound=RouteReturn, covariant=True)
+
 
 def inject_blockservice(f: Callable[..., R]) -> Callable[..., R]:
     """Inject photo service as named argument"""
+
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> R:
-        service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
-        service = service_provider.get(BlockServiceInterface) # type: ignore
+        service_provider = get_service_provider(
+            cast(FlaskWithServiceProvider, current_app)
+        )
+        service = service_provider.get(BlockServiceInterface)  # type: ignore
         return f(block_service=service, *args, **kwargs)
+
     return wrapper
+
 
 def inject_typeservice(f: Callable[..., R]) -> Callable[..., R]:
     """Inject type service as named argument"""
+
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> R:
-        service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
-        service = service_provider.get(TypeServiceInterface) # type: ignore
+        service_provider = get_service_provider(
+            cast(FlaskWithServiceProvider, current_app)
+        )
+        service = service_provider.get(TypeServiceInterface)  # type: ignore
         return f(type_service=service, *args, **kwargs)
+
     return wrapper
+
 
 def inject_configservice(f: Callable[..., R]) -> Callable[..., R]:
     """Inject config service as named argument"""
+
     @wraps(f)
     def wrapper(*args: Any, **kwargs: Any) -> R:
-        service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
-        service = service_provider.get(ConfigServiceInterface) # type: ignore
+        service_provider = get_service_provider(
+            cast(FlaskWithServiceProvider, current_app)
+        )
+        service = service_provider.get(ConfigServiceInterface)  # type: ignore
         return f(config_service=service, *args, **kwargs)
+
     return wrapper

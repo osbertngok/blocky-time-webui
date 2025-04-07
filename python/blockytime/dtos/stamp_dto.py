@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from .base_dto import BaseDTO
+
 
 @dataclass
 class StampDTO(BaseDTO):
@@ -16,12 +18,12 @@ class StampDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            'uid': self.uid,
-            'stamper_uid': self.stamper_uid,
-            'interval': self.interval,
-            'block_data': self.block_data.hex() if self.block_data else None,
-            'reminds': self.reminds,
-            'timestamp': self.timestamp,
-            'ext_i': self.ext_i,
-            'ext_t': self.ext_t
-        } 
+            "uid": self.uid,
+            "stamper_uid": self.stamper_uid,
+            "interval": self.interval,
+            "block_data": self.block_data.hex() if self.block_data else None,
+            "reminds": self.reminds,
+            "timestamp": self.timestamp,
+            "ext_i": self.ext_i,
+            "ext_t": self.ext_t,
+        }

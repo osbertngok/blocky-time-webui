@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple
+
 
 @dataclass
 class BlockyTimeConfig:
@@ -9,7 +10,7 @@ class BlockyTimeConfig:
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            'specialTimePeriod': self.special_time_period,
-            'disablePixelate': self.disable_pixelate,
-            'mainTimePrecision': self.main_time_precision
+            "specialTimePeriod": self.special_time_period,
+            "disablePixelate": self.disable_pixelate,
+            "mainTimePrecision": self.main_time_precision,
         }

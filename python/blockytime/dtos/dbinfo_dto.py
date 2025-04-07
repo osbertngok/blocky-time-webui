@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 
 @dataclass
 class DBInfoDTO:
@@ -8,8 +9,4 @@ class DBInfoDTO:
     uid: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            'uid': self.uid,
-            'version': self.version,
-            'info': self.info
-        } 
+        return {"uid": self.uid, "version": self.version, "info": self.info}

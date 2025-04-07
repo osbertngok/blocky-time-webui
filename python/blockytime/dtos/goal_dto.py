@@ -1,6 +1,8 @@
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 from .base_dto import BaseDTO
+
 
 @dataclass
 class GoalDTO(BaseDTO):
@@ -24,20 +26,20 @@ class GoalDTO(BaseDTO):
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),
-            'uid': self.uid,
-            'type': self.type,
-            'hours': self.hours,
-            'duration_type': self.duration_type,
-            'attr_uid': self.attr_uid,
-            'type_uid': self.type_uid,
-            'project_uid': self.project_uid,
-            'start_date': self.start_date,
-            'end_date': self.end_date,
-            'comment': self.comment,
-            'remind_policy': self.remind_policy,
-            'state': self.state,
-            'fav': self.fav,
-            'priority': self.priority,
-            'ext_i': self.ext_i,
-            'ext_t': self.ext_t
-        } 
+            "uid": self.uid,
+            "type": self.type,
+            "hours": self.hours,
+            "duration_type": self.duration_type,
+            "attr_uid": self.attr_uid,
+            "type_uid": self.type_uid,
+            "project_uid": self.project_uid,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "comment": self.comment,
+            "remind_policy": self.remind_policy,
+            "state": self.state,
+            "fav": self.fav,
+            "priority": self.priority,
+            "ext_i": self.ext_i,
+            "ext_t": self.ext_t,
+        }

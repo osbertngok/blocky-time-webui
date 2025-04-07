@@ -12,17 +12,17 @@ from .trend_history import TrendHistory
 from .type_ import Type
 
 __all__ = [
-    'Base',
-    'Block',
-    'Category',
-    'Config',
-    'DBInfo',
-    'Goal',
-    'Link',
-    'Project',
-    'Remind',
-    'Stamp',
-    'Stamper',
-    'TrendHistory',
-    'Type',
-] 
+    "Base",
+    "Block",
+    "Category",
+    "Config",
+    "DBInfo",
+    "Goal",
+    "Link",
+    "Project",
+    "Remind",
+    "Stamp",
+    "Stamper",
+    "TrendHistory",
+    "Type",
+]

@@ -1,9 +1,9 @@
-from blockytime.interfaces.typeserviceinterface import TypeServiceInterface
 from blockytime.dtos.type_dto import TypeDTO
-from datetime import datetime
+from blockytime.interfaces.typeserviceinterface import TypeServiceInterface
+from blockytime.models.type_ import Type
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
-from blockytime.models.type_ import Type
+
 
 class TypeService(TypeServiceInterface):
     def __init__(self, engine: Engine):

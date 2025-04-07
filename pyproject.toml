@@ -35,7 +35,10 @@ dev = [
     "types-beautifulsoup4",
     "types-Pillow",
     "types-Flask-Cors",
-    "types-pytz"
+    "types-pytz",
+    "isort",
+    "autoflake",
+    "black"
 ]
 
 [tool.setuptools]
