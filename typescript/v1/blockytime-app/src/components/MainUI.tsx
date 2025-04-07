@@ -6,6 +6,7 @@ import { clearSelection, triggerRefresh } from '../store/selectionSlice';
 import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceContext';
+import { useConfigService } from '../contexts/ServiceContext';
 import { BlockModel } from '../models/block';
 
 interface MainUIProps {
@@ -32,6 +33,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   // 2025-03-28-2-45
   const { selectedBlocks } = useAppSelector(state => state.selection);
   const blockService = useBlockService();
+  const configService = useConfigService();
   
   // Count selected blocks
   const selectedBlockCount = Object.keys(selectedBlocks).length;

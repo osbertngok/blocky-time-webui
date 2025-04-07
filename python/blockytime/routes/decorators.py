@@ -5,7 +5,7 @@ from flask import Response as FlaskResponse, current_app
 from ..services.di import get_service_provider, FlaskWithServiceProvider
 from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..interfaces.typeserviceinterface import TypeServiceInterface
-
+from ..interfaces.configserviceinterface import ConfigServiceInterface
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]
 F = TypeVar('F', bound=Callable[..., Any])
@@ -38,4 +38,13 @@ def inject_typeservice(f: Callable[..., R]) -> Callable[..., R]:
         service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
         service = service_provider.get(TypeServiceInterface) # type: ignore
         return f(type_service=service, *args, **kwargs)
+    return wrapper
+
+def inject_configservice(f: Callable[..., R]) -> Callable[..., R]:
+    """Inject config service as named argument"""
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> R:
+        service_provider = get_service_provider(cast(FlaskWithServiceProvider, current_app))
+        service = service_provider.get(ConfigServiceInterface) # type: ignore
+        return f(config_service=service, *args, **kwargs)
     return wrapper

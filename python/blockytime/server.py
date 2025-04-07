@@ -15,14 +15,15 @@ from flasgger import Swagger
 from .paths import DB_PATH, DATA_PATH, LOG_PATH
 from .interfaces.configdict import ConfigDict
 from .services.di import ServiceProvider, FlaskWithServiceProvider
-from .routes import blocks, types
+from .routes import blocks, types, configs
 from .log import ColoredFormatter
 from .routes.decorators import RouteReturn
 from .interfaces.blockserviceinterface import BlockServiceInterface
 from .interfaces.typeserviceinterface import TypeServiceInterface
+from .interfaces.configserviceinterface import ConfigServiceInterface
 from .services.blockservice import BlockService
 from .services.typeservice import TypeService
-
+from .services.configservice import ConfigService
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -135,6 +136,7 @@ def create_app() -> Flask:
     load_config(app)
     service_provider.register(BlockServiceInterface, BlockService(engine)) # type: ignore
     service_provider.register(TypeServiceInterface, TypeService(engine)) # type: ignore
+    service_provider.register(ConfigServiceInterface, ConfigService(engine)) # type: ignore
     service_provider.register(ConfigDict, app.config)
     
     # Define static file routes
@@ -150,6 +152,7 @@ def create_app() -> Flask:
     # Register blueprints
     app.register_blueprint(blocks.bp)
     app.register_blueprint(types.bp)
+    app.register_blueprint(configs.bp)
     # log.info("Registered company, namecard and auth routes")
 
     # Register routes

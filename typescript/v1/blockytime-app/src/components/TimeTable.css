@@ -83,7 +83,7 @@
   color: #555;
 }
 
-.quarter-hour-blocks {
+.blocks-in-hour {
   display: flex;
   flex: 1;
   gap: 2px;

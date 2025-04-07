@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { BlockModel } from '../models/block';
-import { useBlockService } from '../contexts/ServiceContext';
+import { useBlockService, useConfigService } from '../contexts/ServiceContext';
 import './TimeTable.css';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
@@ -11,6 +11,7 @@ import {
   updateDragSelection, 
   endDragSelection 
 } from '../store/selectionSlice';
+import { BlockyTimeConfig } from '../models/blockytimeconfig';
 
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date
@@ -25,11 +26,17 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   selectedTypeUid,
   selectedProjectUid
 }, ref) => {
+  const [config, setConfig] = useState<BlockyTimeConfig>({
+    mainTimePrecision: 1, // 1 == 15 min, 2 == 30 min
+    disablePixelate: false,
+    specialTimePeriod: []
+  });
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [blocks, setBlocks] = useState<Record<string, BlockModel[]>>({});
   const [loading, setLoading] = useState(false);
   const [visibleDates, setVisibleDates] = useState<string[]>([]);
   const blockService = useBlockService();
+  const configService = useConfigService();
 
   // Add Redux hooks
   const dispatch = useAppDispatch();
@@ -121,8 +128,16 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     }
   };
 
+  const fetchConfig = async () => {
+    const fetchedConfig = await configService.getConfigAsync();
+    setConfig(fetchedConfig);
+  }
+
   // Initial data loading
   useEffect(() => {
+    // Get config from config service to determine time precision (15 min or 30 min), and store it to state
+    fetchConfig();
+
     const dates = getDateRange(currentDate);
     prefetchBlocks(dates);
     
@@ -397,7 +412,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   };
 
   // Render a single time block cell
-  const renderTimeBlock = (dateStr: string, hour: number, minute: number) => {
+  const renderTimeBlock = (dateStr: string, hour: number, minute: number, timePrecision: number) => {
     const blocksByTime = getBlocksByTime(dateStr);
     const key = `${hour}:${minute}`;
     const block = blocksByTime[key];
@@ -496,23 +511,43 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     // Loop through 24 hours
     for (let hour = 0; hour < 24; hour++) {
       const hourLabel = hour.toString().padStart(2, '0');
+
+      if (config.mainTimePrecision === 1) {
       
-      // Create quarter-hour blocks for this hour
-      const quarterHourBlocks = [];
-      for (let minute = 0; minute < 60; minute += 15) {
-        quarterHourBlocks.push(renderTimeBlock(dateStr, hour, minute));
-      }
-      
-      // Create a row for this hour
-      hourRows.push(
-        <div key={`${dateStr}-${hour}`} className="hour-row">
-          <div className="hour-label">{hourLabel}:00</div>
-          <div className="quarter-hour-blocks">
-            {quarterHourBlocks}
-            {renderTimeIndicator(dateStr, hour)}
+        // Create quarter-hour blocks for this hour
+        const quarterHourBlocks = [];
+        for (let minute = 0; minute < 60; minute += 15) {
+          quarterHourBlocks.push(renderTimeBlock(dateStr, hour, minute, config.mainTimePrecision));
+        }
+        
+        // Create a row for this hour
+        hourRows.push(
+          <div key={`${dateStr}-${hour}`} className="hour-row">
+            <div className="hour-label">{hourLabel}:00</div>
+            <div className="blocks-in-hour">
+              {quarterHourBlocks}
+              {renderTimeIndicator(dateStr, hour)}
+            </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        // Create half-hour blocks for this hour
+        const halfHourBlocks = [];
+        for (let minute = 0; minute < 60; minute += 30) {
+          halfHourBlocks.push(renderTimeBlock(dateStr, hour, minute, config.mainTimePrecision));
+        }
+
+        // Create a row for this hour
+        hourRows.push(
+          <div key={`${dateStr}-${hour}`} className="hour-row">
+            <div className="hour-label">{hourLabel}:00</div>
+            <div className="blocks-in-hour">
+              {halfHourBlocks}
+              {renderTimeIndicator(dateStr, hour)}
+            </div>
+          </div>
+        );
+      }
     }
     
     return (
