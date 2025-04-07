@@ -52,6 +52,9 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   // Add a ref to track initial scroll
   const initialScrollCompleted = useRef(false);
 
+  // Add a ref to track if we've done the initial fetch
+  const initialFetchRef = useRef(false);
+
   // Set today's date when component mounts
   useEffect(() => {
     console.log("Setting current date to today in TimeTable");
@@ -122,26 +125,33 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   }, [blockService, formatDateString]);
 
   // Prefetch blocks for a range of dates
-  const prefetchBlocks = async (dates: Date[]) => {
+  const prefetchBlocks = useCallback(async (dates: Date[]) => {
     for (const date of dates) {
       await fetchBlocksForDate(date);
     }
-  };
+  }, [fetchBlocksForDate]);
 
-  const fetchConfig = async () => {
+  // Change the fetchConfig function to be memoized
+  const fetchConfig = useCallback(async () => {
     const fetchedConfig = await configService.getConfigAsync();
     setConfig(fetchedConfig);
-  }
+  }, [configService]);
 
-  // Initial data loading
+  // Update the effect to include fetchConfig in dependencies
   useEffect(() => {
-    // Get config from config service to determine time precision (15 min or 30 min), and store it to state
     fetchConfig();
+  }, [fetchConfig]); // Now includes the memoized fetchConfig
 
+  // Handle currentDate changes
+  useEffect(() => {
+    // Skip if we've already done the initial fetch
+    if (initialFetchRef.current) {
+      return;
+    }
+    
     const dates = getDateRange(currentDate);
     prefetchBlocks(dates);
     
-    // Set initial visible dates (current date and ±1 day)
     const yesterday = new Date(currentDate);
     yesterday.setDate(yesterday.getDate() - 1);
     
@@ -154,11 +164,12 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       formatDateString(tomorrow)
     ];
     
-    // Ensure no duplicates
     setVisibleDates([...new Set(initialVisibleDates)]);
+    initialFetchRef.current = true;
+  }, [currentDate, prefetchBlocks, formatDateString]);
 
-    // After setting visible dates, trigger a scroll to today's position
-    // but only do this once when component mounts
+  // Handle initial scroll - runs once
+  useEffect(() => {
     if (!initialScrollCompleted.current && containerRef?.current) {
       const today = formatDateString(new Date());
       
@@ -187,7 +198,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
         });
       });
     }
-  }, [currentDate]);
+  }, [containerRef, formatDateString]); // Only run when containerRef changes and not mounted
 
   // Function to refresh all visible dates
   const refreshVisibleDates = useCallback(() => {
