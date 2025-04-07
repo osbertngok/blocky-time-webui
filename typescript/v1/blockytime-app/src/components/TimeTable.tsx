@@ -23,8 +23,8 @@ interface TimeTableProps {
 export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, TimeTableProps>(({ 
   initialDate = new Date(),
   containerRef,
-  selectedTypeUid,
-  selectedProjectUid
+  selectedTypeUid, // eslint-disable-line @typescript-eslint/no-unused-vars
+  selectedProjectUid // eslint-disable-line @typescript-eslint/no-unused-vars
 }, ref) => {
   const [config, setConfig] = useState<BlockyTimeConfig>({
     mainTimePrecision: 1, // 1 == 15 min, 2 == 30 min
@@ -318,10 +318,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       if (config.mainTimePrecision === 2) {
         // For 30-minute blocks, select both the current block and the next 15-minute block
         const firstBlock = blockId;
-        const secondBlock = {
-          ...blockId,
-          minute: blockId.minute + 15
-        };
         dispatch(startDragSelection({ block: firstBlock, isHalfHour: true }));
       } else {
         dispatch(startDragSelection({ block: blockId, isHalfHour: false }));
@@ -334,10 +330,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       if (config.mainTimePrecision === 2) {
         // For 30-minute blocks, update with both blocks
         const firstBlock = blockId;
-        const secondBlock = {
-          ...blockId,
-          minute: blockId.minute + 15
-        };
         dispatch(updateDragSelection({ block: firstBlock, isHalfHour: true }));
       } else {
         dispatch(updateDragSelection({ block: blockId, isHalfHour: false }));
@@ -361,10 +353,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       if (config.mainTimePrecision === 2) {
         // For 30-minute blocks, toggle both blocks
         const firstBlock = blockId;
-        const secondBlock = {
-          ...blockId,
-          minute: blockId.minute + 15
-        };
         dispatch(toggleBlockSelection({ block: firstBlock, isHalfHour: true }));
       } else {
         dispatch(toggleBlockSelection({ block: blockId, isHalfHour: false }));
@@ -442,7 +430,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   };
 
   // Render a single time block cell
-  const renderTimeBlock = (dateStr: string, hour: number, minute: number, timePrecision: number) => {
+  const renderTimeBlock = (dateStr: string, hour: number, minute: number, _timePrecision: number) => {
     const blocksByTime = getBlocksByTime(dateStr);
     const key = `${hour}:${minute}`;
     const block = blocksByTime[key];
@@ -475,7 +463,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
           e.stopPropagation();
           handleBlockMouseUp(blockId);
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={(_e) => {
           handleBlockMouseLeave();
         }}
         // Add touch events for mobile
