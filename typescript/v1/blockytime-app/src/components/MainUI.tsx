@@ -10,6 +10,8 @@ import { useConfigService } from '../contexts/ServiceContext';
 import { BlockModel } from '../models/block';
 import { BlockyTimeConfig } from '../models/config';
 
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MainUIProps {
   // Props can be added later if needed
 }
@@ -111,7 +113,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
     initializeView();
   }, []);
 
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+  const handleScroll = (_event: React.UIEvent<HTMLDivElement>) => {
     // The scroll event handler can be simplified or removed if not needed
   };
 
@@ -161,7 +163,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
           return {
             date: keyToTimestamp(key),
             comment: '',
-            operation: 'delete' as 'delete',
+            operation: 'delete' as const,
           };
         });
       
