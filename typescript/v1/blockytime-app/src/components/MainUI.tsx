@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, forwardRef, useEffect } from 'react';
 import { TimeTable } from './TimeTable';
 import { TypeSelector } from './TypeSelector';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -17,8 +17,9 @@ const keyToTimestamp = (key: string): number => {
   return new Date(`${year}-${month}-${day}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`).getTime() / 1000;
 }
 
-export const MainUI: React.FC<MainUIProps> = () => {
+export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProps>((props, ref) => {
   const timeTableContainerRef = useRef<HTMLDivElement>(null);
+  const timeTableRef = useRef<{ setCurrentDate: (date: Date) => void }>(null);
   const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -35,6 +36,63 @@ export const MainUI: React.FC<MainUIProps> = () => {
   // Count selected blocks
   const selectedBlockCount = Object.keys(selectedBlocks).length;
   
+  // Set today's date and scroll to current time when component mounts
+  useEffect(() => {
+    const initializeView = async () => {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      
+      // First set the current date in TimeTable
+      timeTableRef.current?.setCurrentDate(now);
+      
+      // Function to check if today's container exists and is properly rendered
+      const checkTodayContainer = (): Element | null => {
+        if (!timeTableContainerRef.current) return null;
+        const container = timeTableContainerRef.current.querySelector(`[data-date="${today}"]`);
+        
+        // Additional check to ensure the container has content and is at the expected position
+        if (container && container.children.length > 0) {
+          // Get all date containers
+          const allDateContainers = timeTableContainerRef.current.querySelectorAll('[data-date]');
+          const dates = Array.from(allDateContainers).map(el => el.getAttribute('data-date'));
+          
+          // Check if today's container is in the expected position
+          const todayIndex = dates.indexOf(today);
+          
+          // Only return the container if today is in the correct position
+          if (todayIndex === 1) {
+            return container;
+          }
+        }
+        return null;
+      };
+
+      // Try to find today's container with retries
+      let attempts = 0;
+      const maxAttempts = 50;
+      const retryInterval = 200;
+
+      const attemptScroll = () => {
+        // Set current date each attempt to ensure it stays on today
+        timeTableRef.current?.setCurrentDate(now);
+        
+        const todayContainer = checkTodayContainer();
+        
+        if (todayContainer) {
+          scrollToTime(todayContainer, now.getHours(), now.getMinutes());
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(attemptScroll, retryInterval);
+        }
+      };
+
+      // Start the attempts
+      attemptScroll();
+    };
+
+    initializeView();
+  }, []);
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     // The scroll event handler can be simplified or removed if not needed
   };
@@ -105,6 +163,60 @@ export const MainUI: React.FC<MainUIProps> = () => {
     }
   };
 
+  const scrollToCurrentTime = () => {
+    if (!timeTableContainerRef.current) return;
+    
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Format today's date as YYYY-MM-DD
+    const today = now.toISOString().split('T')[0];
+    
+    // Always set current date to today first
+    timeTableRef.current?.setCurrentDate(now);
+    
+    // Wait for the DOM to update and then scroll
+    setTimeout(() => {
+      const todayContainer = timeTableContainerRef.current?.querySelector(`[data-date="${today}"]`);
+      if (todayContainer) {
+        scrollToTime(todayContainer, currentHour, currentMinute);
+      } else {
+        console.error(`Today container not found for date ${today}`);
+      }
+    }, 100);
+  };
+
+  // Helper function to handle the actual scrolling
+  const scrollToTime = (container: Element, hour: number, minute: number) => {
+    if (!timeTableContainerRef.current) return;
+    
+    // Calculate the scroll position based on the current time
+    const hourHeight = 40;
+    const timeScrollPosition = (hour * hourHeight) + (minute / 60 * hourHeight);
+    
+    // Use offsetTop instead of getBoundingClientRect().top for relative positioning
+    const containerOffsetTop = container.offsetTop;
+    
+    // Get the viewport height
+    const viewportHeight = timeTableContainerRef.current.clientHeight;
+    
+    // Calculate the position to center the current time in the viewport
+    // Using containerOffsetTop instead of containerTop
+    const finalScrollPosition = containerOffsetTop + timeScrollPosition - (viewportHeight / 2);
+    
+    // Scroll to the current time, centered in the viewport
+    timeTableContainerRef.current.scrollTo({
+      top: finalScrollPosition,
+      behavior: 'smooth'
+    });
+  };
+  
+  // Expose the scroll function to parent components
+  React.useImperativeHandle(ref, () => ({
+    scrollToCurrentTime
+  }));
+
   return (
     <div className="main-ui">
       <div 
@@ -113,6 +225,7 @@ export const MainUI: React.FC<MainUIProps> = () => {
         onScroll={handleScroll}
       >
         <TimeTable 
+          ref={timeTableRef}
           containerRef={timeTableContainerRef}
           selectedTypeUid={selectedTypeUid}
           selectedProjectUid={selectedProjectUid}
@@ -148,4 +261,4 @@ export const MainUI: React.FC<MainUIProps> = () => {
       <DebugPanel />
     </div>
   );
-}; 
+}); 

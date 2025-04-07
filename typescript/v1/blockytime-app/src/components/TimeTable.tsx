@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { BlockModel } from '../models/block';
 import { useBlockService } from '../contexts/ServiceContext';
 import './TimeTable.css';
@@ -19,12 +19,12 @@ interface TimeTableProps {
   selectedProjectUid?: number | null;
 }
 
-export const TimeTable: React.FC<TimeTableProps> = ({ 
+export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, TimeTableProps>(({ 
   initialDate = new Date(),
   containerRef,
   selectedTypeUid,
   selectedProjectUid
-}) => {
+}, ref) => {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [blocks, setBlocks] = useState<Record<string, BlockModel[]>>({});
   const [loading, setLoading] = useState(false);
@@ -41,6 +41,20 @@ export const TimeTable: React.FC<TimeTableProps> = ({
   
   // Add state for current time
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Add a ref to track initial scroll
+  const initialScrollCompleted = useRef(false);
+
+  // Set today's date when component mounts
+  useEffect(() => {
+    console.log("Setting current date to today in TimeTable");
+    setCurrentDate(new Date());
+  }, []);
+
+  // Expose setCurrentDate to parent components
+  useImperativeHandle(ref, () => ({
+    setCurrentDate
+  }));
 
   // Format date as YYYY-MM-DD
   const formatDateString = useCallback((date: Date): string => {
@@ -127,6 +141,37 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     
     // Ensure no duplicates
     setVisibleDates([...new Set(initialVisibleDates)]);
+
+    // After setting visible dates, trigger a scroll to today's position
+    // but only do this once when component mounts
+    if (!initialScrollCompleted.current && containerRef?.current) {
+      const today = formatDateString(new Date());
+      
+      // Use requestAnimationFrame to ensure DOM is updated
+      requestAnimationFrame(() => {
+        // Use another RAF to ensure the dates are rendered
+        requestAnimationFrame(() => {
+          const todayContainer = containerRef.current?.querySelector(`[data-date="${today}"]`);
+          if (todayContainer) {
+            // Calculate scroll position to show today's container
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const todayRect = todayContainer.getBoundingClientRect();
+            const scrollTop = todayRect.top - containerRect.top + containerRef.current.scrollTop;
+            
+            // Scroll to position
+            containerRef.current.scrollTop = scrollTop;
+            initialScrollCompleted.current = true;
+            
+            console.log('Initial scroll completed:', {
+              today,
+              scrollTop,
+              containerTop: containerRect.top,
+              todayTop: todayRect.top
+            });
+          }
+        });
+      });
+    }
   }, [currentDate]);
 
   // Function to refresh all visible dates
@@ -471,7 +516,7 @@ export const TimeTable: React.FC<TimeTableProps> = ({
     }
     
     return (
-      <div key={dateStr} className="day-container">
+      <div key={dateStr} className="day-container" data-date={dateStr}>
         {hourRows}
       </div>
     );
@@ -543,4 +588,4 @@ export const TimeTable: React.FC<TimeTableProps> = ({
       </div>
     </div>
   );
-}; 
+}); 

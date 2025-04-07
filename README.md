@@ -6,6 +6,9 @@
 
 BlockyTime Web UI is a web application written in Python and TypeScript that allows you to view and edit the time blocks of the SQLite3 database generated and managed by the said app.
 
+Note: This is NOT an official product of BlockyTime! BlockyTime also has a desktop app for MacOS, if you are using M1 chip or above.
+Consider using this web UI only when you are using Intel Mac, or Linux / Windows.
+
 ![screenshot1](docs/screenshots/screenshot1.png)
 
  
