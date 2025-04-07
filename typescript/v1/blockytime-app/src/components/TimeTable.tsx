@@ -315,13 +315,33 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     
     // Set a timeout to detect long press
     longPressTimeoutRef.current = setTimeout(() => {
-      dispatch(startDragSelection(blockId));
+      if (config.mainTimePrecision === 2) {
+        // For 30-minute blocks, select both the current block and the next 15-minute block
+        const firstBlock = blockId;
+        const secondBlock = {
+          ...blockId,
+          minute: blockId.minute + 15
+        };
+        dispatch(startDragSelection({ block: firstBlock, isHalfHour: true }));
+      } else {
+        dispatch(startDragSelection({ block: blockId, isHalfHour: false }));
+      }
     }, 200); // 200ms threshold for long press
   };
   
   const handleBlockMouseMove = (blockId: TimeBlockId) => {
     if (isDragging && isMouseDown) {
-      dispatch(updateDragSelection(blockId));
+      if (config.mainTimePrecision === 2) {
+        // For 30-minute blocks, update with both blocks
+        const firstBlock = blockId;
+        const secondBlock = {
+          ...blockId,
+          minute: blockId.minute + 15
+        };
+        dispatch(updateDragSelection({ block: firstBlock, isHalfHour: true }));
+      } else {
+        dispatch(updateDragSelection({ block: blockId, isHalfHour: false }));
+      }
     }
   };
   
@@ -338,7 +358,17 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       dispatch(endDragSelection());
     } else {
       // If not dragging, it was a simple click - toggle selection
-      dispatch(toggleBlockSelection(blockId));
+      if (config.mainTimePrecision === 2) {
+        // For 30-minute blocks, toggle both blocks
+        const firstBlock = blockId;
+        const secondBlock = {
+          ...blockId,
+          minute: blockId.minute + 15
+        };
+        dispatch(toggleBlockSelection({ block: firstBlock, isHalfHour: true }));
+      } else {
+        dispatch(toggleBlockSelection({ block: blockId, isHalfHour: false }));
+      }
     }
   };
   

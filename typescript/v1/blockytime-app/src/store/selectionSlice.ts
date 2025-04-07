@@ -7,6 +7,12 @@ export interface TimeBlockId {
   minute: number;
 }
 
+// Define payload type for actions that need to handle half-hour blocks
+interface TimeBlockPayload {
+  block: TimeBlockId;
+  isHalfHour: boolean;
+}
+
 // Format: dateStr-hour-minute (e.g., "2023-05-01-14-30")
 export const formatTimeBlockId = (id: TimeBlockId): string => 
   `${id.dateStr}-${id.hour}-${id.minute}`;
@@ -21,106 +27,99 @@ export const parseTimeBlockId = (id: string): TimeBlockId => {
 };
 
 interface SelectionState {
-  selectedBlocks: Record<string, boolean>; // Map of block IDs to selection state
-  dragStartBlock: TimeBlockId | null;
+  selectedBlocks: Record<string, boolean>;
+  dragStartBlock: TimeBlockPayload | null;
   isDragging: boolean;
-  refreshCounter: number; // Add a counter to trigger refreshes
+  refreshCounter: number;
 }
 
 const initialState: SelectionState = {
   selectedBlocks: {},
   dragStartBlock: null,
   isDragging: false,
-  refreshCounter: 0, // Initialize counter
+  refreshCounter: 0,
+};
+
+// Helper function to select a block and its pair if needed
+const selectBlockAndPair = (
+  state: SelectionState, 
+  block: TimeBlockId, 
+  isHalfHour: boolean, 
+  selected: boolean = true
+) => {
+  const blockId = formatTimeBlockId(block);
+  if (selected) {
+    state.selectedBlocks[blockId] = true;
+    if (isHalfHour && block.minute % 30 === 0) {
+      // If it's the first block of a 30-minute pair, select the next one
+      const nextBlock = {
+        ...block,
+        minute: block.minute + 15
+      };
+      state.selectedBlocks[formatTimeBlockId(nextBlock)] = true;
+    } else if (isHalfHour && block.minute % 30 === 15) {
+      // If it's the second block of a 30-minute pair, select the previous one
+      const prevBlock = {
+        ...block,
+        minute: block.minute - 15
+      };
+      state.selectedBlocks[formatTimeBlockId(prevBlock)] = true;
+    }
+  } else {
+    delete state.selectedBlocks[blockId];
+    if (isHalfHour) {
+      if (block.minute % 30 === 0) {
+        delete state.selectedBlocks[formatTimeBlockId({ ...block, minute: block.minute + 15 })];
+      } else if (block.minute % 30 === 15) {
+        delete state.selectedBlocks[formatTimeBlockId({ ...block, minute: block.minute - 15 })];
+      }
+    }
+  }
 };
 
 export const selectionSlice = createSlice({
   name: 'selection',
   initialState,
   reducers: {
-    toggleBlockSelection: (state, action: PayloadAction<TimeBlockId>) => {
-      const blockId = formatTimeBlockId(action.payload);
-      state.selectedBlocks[blockId] = !state.selectedBlocks[blockId];
-      
-      // If the block is now unselected, delete it from the map
-      if (!state.selectedBlocks[blockId]) {
-        delete state.selectedBlocks[blockId];
-      }
+    toggleBlockSelection: (state, action: PayloadAction<TimeBlockPayload>) => {
+      const { block, isHalfHour } = action.payload;
+      const blockId = formatTimeBlockId(block);
+      const isSelected = !state.selectedBlocks[blockId];
+      selectBlockAndPair(state, block, isHalfHour, isSelected);
     },
     
-    startDragSelection: (state, action: PayloadAction<TimeBlockId>) => {
-      // Clear existing selections when starting a new drag
+    startDragSelection: (state, action: PayloadAction<TimeBlockPayload>) => {
       state.selectedBlocks = {};
       state.dragStartBlock = action.payload;
       state.isDragging = true;
-      
-      // Select the starting block
-      const blockId = formatTimeBlockId(action.payload);
-      state.selectedBlocks[blockId] = true;
+      selectBlockAndPair(state, action.payload.block, action.payload.isHalfHour, true);
     },
     
-    updateDragSelection: (state, action: PayloadAction<TimeBlockId>) => {
+    updateDragSelection: (state, action: PayloadAction<TimeBlockPayload>) => {
       if (!state.isDragging || !state.dragStartBlock) return;
       
-      // Clear previous selections
       state.selectedBlocks = {};
+      const { block: endBlock, isHalfHour } = action.payload;
+      const { block: startBlock } = state.dragStartBlock;
       
-      // Get the range of blocks to select
-      const start = state.dragStartBlock;
-      const end = action.payload;
+      // Calculate time ranges
+      const startTime = startBlock.hour * 60 + startBlock.minute;
+      const endTime = endBlock.hour * 60 + endBlock.minute;
       
-      // If dates are different, only select blocks on the start date for now
-      // (This can be enhanced to handle multi-day selections if needed)
-      if (start.dateStr !== end.dateStr) {
-        // Select all blocks in the start date from start time to end of day
-        for (let hour = start.hour; hour < 24; hour++) {
-          for (let minute = 0; minute < 60; minute += 15) {
-            // Skip times before the start time
-            if (hour === start.hour && minute < start.minute) continue;
-            
-            const blockId = formatTimeBlockId({
-              dateStr: start.dateStr,
-              hour,
-              minute
-            });
-            state.selectedBlocks[blockId] = true;
-          }
-        }
+      const minTime = Math.min(startTime, endTime);
+      const maxTime = Math.max(startTime, endTime);
+      
+      // Select all blocks in the range
+      for (let time = minTime; time <= maxTime; time += (isHalfHour ? 30 : 15)) {
+        const hour = Math.floor(time / 60);
+        const minute = time % 60;
         
-        // Select all blocks in the end date from start of day to end time
-        for (let hour = 0; hour <= end.hour; hour++) {
-          for (let minute = 0; minute < 60; minute += 15) {
-            // Skip times after the end time
-            if (hour === end.hour && minute > end.minute) continue;
-            
-            const blockId = formatTimeBlockId({
-              dateStr: end.dateStr,
-              hour,
-              minute
-            });
-            state.selectedBlocks[blockId] = true;
-          }
-        }
-      } else {
-        // Same date - select all blocks between start and end times
-        const startTime = start.hour * 60 + start.minute;
-        const endTime = end.hour * 60 + end.minute;
-        
-        // Determine actual start and end (in case of backwards selection)
-        const minTime = Math.min(startTime, endTime);
-        const maxTime = Math.max(startTime, endTime);
-        
-        for (let totalMinutes = minTime; totalMinutes <= maxTime; totalMinutes += 15) {
-          const hour = Math.floor(totalMinutes / 60);
-          const minute = totalMinutes % 60;
-          
-          const blockId = formatTimeBlockId({
-            dateStr: start.dateStr,
-            hour,
-            minute
-          });
-          state.selectedBlocks[blockId] = true;
-        }
+        selectBlockAndPair(
+          state,
+          { dateStr: startBlock.dateStr, hour, minute },
+          isHalfHour,
+          true
+        );
       }
     },
     
@@ -129,14 +128,14 @@ export const selectionSlice = createSlice({
       state.dragStartBlock = null;
     },
     
-    triggerRefresh: (state) => {
-      state.refreshCounter += 1;
-    },
-    
     clearSelection: (state) => {
       state.selectedBlocks = {};
       state.isDragging = false;
       state.dragStartBlock = null;
+    },
+    
+    triggerRefresh: (state) => {
+      state.refreshCounter += 1;
     }
   },
 });
@@ -150,4 +149,4 @@ export const {
   triggerRefresh
 } = selectionSlice.actions;
 
-export default selectionSlice.reducer; 
+export default selectionSlice.reducer;

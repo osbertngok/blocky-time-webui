@@ -8,6 +8,7 @@ import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceContext';
 import { useConfigService } from '../contexts/ServiceContext';
 import { BlockModel } from '../models/block';
+import { BlockyTimeConfig } from '../models/config';
 
 interface MainUIProps {
   // Props can be added later if needed
@@ -24,6 +25,11 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [config, setConfig] = useState<BlockyTimeConfig>({
+    mainTimePrecision: 1,
+    disablePixelate: false,
+    specialTimePeriod: []
+  });
   
   const dispatch = useAppDispatch();
   // keys of selectedBlocks are things like
@@ -35,8 +41,18 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   const blockService = useBlockService();
   const configService = useConfigService();
   
-  // Count selected blocks
-  const selectedBlockCount = Object.keys(selectedBlocks).length;
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const fetchedConfig = await configService.getConfigAsync();
+      setConfig(fetchedConfig);
+    };
+    fetchConfig();
+  }, [configService]);
+
+  // Count selected blocks, adjusting for 30-minute precision
+  const displayBlockCount = config.mainTimePrecision === 2 
+    ? Math.ceil(Object.keys(selectedBlocks).length / 2)  // Show half the number for 30-minute blocks
+    : Object.keys(selectedBlocks).length;  // Show actual count for 15-minute blocks
   
   // Set today's date and scroll to current time when component mounts
   useEffect(() => {
@@ -133,7 +149,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   };
   
   const handleDeleteBlocks = async () => {
-    if (selectedBlockCount === 0) return;
+    if (displayBlockCount === 0) return;
     
     try {
       setIsDeleting(true);
@@ -238,9 +254,9 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
       </div>
       
       {/* Fixed selection info at bottom of screen */}
-      {selectedBlockCount > 0 && (
+      {displayBlockCount > 0 && (
         <div className="selection-info-fixed">
-          <span>{selectedBlockCount} blocks selected</span>
+          <span>{displayBlockCount} {config.mainTimePrecision === 2 ? 'half-hour' : 'quarter-hour'} block{displayBlockCount !== 1 ? 's' : ''} selected</span>
           <div className="selection-buttons">
             <button 
               className="delete-button" 
