@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { BlockModel } from '../models/block';
-import { useBlockService, useConfigService } from '../contexts/ServiceContext';
+import { useBlockService, useConfigService } from '../contexts/ServiceHooks';
 import './TimeTable.css';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 

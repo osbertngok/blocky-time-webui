@@ -5,8 +5,8 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { clearSelection, triggerRefresh } from '../store/selectionSlice';
 import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
-import { useBlockService } from '../contexts/ServiceContext';
-import { useConfigService } from '../contexts/ServiceContext';
+import { useBlockService } from '../contexts/ServiceHooks';
+import { useConfigService } from '../contexts/ServiceHooks';
 import { BlockyTimeConfig } from '../models/blockytimeconfig';
 
 

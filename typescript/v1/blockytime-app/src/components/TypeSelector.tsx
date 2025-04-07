@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TypeModel } from '../models/type';
-import { useTypeService } from '../contexts/ServiceContext';
+import { useTypeService } from '../contexts/ServiceHooks';
 import { 
   List, 
   ListItemButton, 
