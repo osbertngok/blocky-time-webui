@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { TypeModel } from '../models/type';
-import { ProjectModel } from '../models/project';
 import { useTypeService } from '../contexts/ServiceContext';
 import { 
   List, 
