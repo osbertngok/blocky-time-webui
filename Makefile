@@ -162,3 +162,7 @@ fe-dev:
 .PHONY: fe-scss
 fe-scss:
 	@cd typescript/v1/blockytime-app && npm run watch-scss
+
+.PHONY: fe-lint
+fe-lint:
+	@cd typescript/v1/blockytime-app && npm run lint
