@@ -11,7 +11,7 @@ import {
   updateDragSelection, 
   endDragSelection 
 } from '../store/selectionSlice';
-import { BlockyTimeConfig, TimePrecision } from '../models/blockytimeconfig';
+import { BlockyTimeConfig } from '../models/blockytimeconfig';
 
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date

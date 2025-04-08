@@ -40,18 +40,23 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
     fetchTypes();
   }, [typeService]);
 
-  const handleTypeClick = (typeUid: number, projectUid?: number | null) => {
-    if (onTypeSelect) {
+  const isValidTypeUid = (uid: number | undefined): uid is number => {
+    return uid !== undefined;
+  };
+
+  const handleTypeClick = (typeUid: number | undefined, projectUid?: number) => {
+    if (isValidTypeUid(typeUid) && onTypeSelect) {
       onTypeSelect(typeUid, projectUid);
     }
   };
 
-  const handleToggleExpand = (typeUid: number, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setExpandedTypes(prev => ({
-      ...prev,
-      [typeUid]: !prev[typeUid]
-    }));
+  const handleToggleExpand = (typeUid: number | undefined, e: React.MouseEvent) => {
+    if (isValidTypeUid(typeUid)) {
+      setExpandedTypes(prev => ({
+        ...prev,
+        [typeUid]: !prev[typeUid]
+      }));
+    }
   };
 
   // Group types by category
@@ -105,7 +110,7 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
               </Typography>
               <List component="div" disablePadding dense>
                 {categoryTypes.map(type => {
-                  const isExpanded = !!expandedTypes[type.uid];
+                  const isExpanded = isValidTypeUid(type.uid) && !!expandedTypes[type.uid];
                   const hasProjects = type.projects && type.projects.length > 0;
                   const colorStyle = getColorStyle(type.color);
                   
@@ -125,7 +130,7 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
                             backgroundColor: colorStyle.backgroundColor || 'inherit',
                           }
                         }}
-                        onClick={() => handleTypeClick(type.uid)}
+                        onClick={() => isValidTypeUid(type.uid) && handleTypeClick(type.uid)}
                         disableRipple
                       >
                         <Box 
@@ -134,7 +139,7 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
                           alignItems="center"
                           justifyContent="center"
                           mr={1}
-                          onClick={(e) => hasProjects && handleToggleExpand(type.uid, e)}
+                          onClick={(e) => hasProjects && isValidTypeUid(type.uid) && handleToggleExpand(type.uid, e)}
                           sx={{ cursor: hasProjects ? 'pointer' : 'default' }}
                         >
                           {hasProjects && (isExpanded ? <ExpandLess /> : <ExpandMore />)}
@@ -159,7 +164,7 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
                                     opacity: 1
                                   }
                                 }}
-                                onClick={() => handleTypeClick(type.uid, project.uid)}
+                                onClick={() => isValidTypeUid(type.uid) && handleTypeClick(type.uid, project.uid)}
                                 disableRipple
                               >
                                 <Box width={8} height={8} borderRadius="50%" bgcolor="currentColor" mr={1} />

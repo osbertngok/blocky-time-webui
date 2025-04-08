@@ -215,7 +215,8 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
     const timeScrollPosition = (hour * hourHeight) + (minute / 60 * hourHeight);
     
     // Use offsetTop instead of getBoundingClientRect().top for relative positioning
-    const containerOffsetTop = container.offsetTop;
+    const containerRect = container.getBoundingClientRect();
+    const containerOffsetTop = containerRect.top;
     
     // Get the viewport height
     const viewportHeight = timeTableContainerRef.current.clientHeight;
