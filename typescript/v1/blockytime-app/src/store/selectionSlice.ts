@@ -26,7 +26,7 @@ export const parseTimeBlockId = (id: string): TimeBlockId => {
   };
 };
 
-interface SelectionState {
+export interface SelectionState {
   selectedBlocks: Record<string, boolean>;
   dragStartBlock: TimeBlockPayload | null;
   isDragging: boolean;

@@ -14,17 +14,13 @@ import {
 import { BlockyTimeConfig } from '../models/blockytimeconfig';
 
 interface TimeTableProps {
-  initialDate?: Date; // Optional initial date
-  containerRef?: React.RefObject<HTMLDivElement>;
-  selectedTypeUid?: number | null;
-  selectedProjectUid?: number | null;
+  initialDate?: Date;
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, TimeTableProps>(({ 
   initialDate = new Date(),
-  containerRef,
-  selectedTypeUid, // eslint-disable-line @typescript-eslint/no-unused-vars
-  selectedProjectUid // eslint-disable-line @typescript-eslint/no-unused-vars
+  containerRef
 }, ref) => {
   const [config, setConfig] = useState<BlockyTimeConfig>({
     mainTimePrecision: "QUARTER_HOUR",
@@ -178,7 +174,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
         // Use another RAF to ensure the dates are rendered
         requestAnimationFrame(() => {
           const todayContainer = containerRef.current?.querySelector(`[data-date="${today}"]`);
-          if (todayContainer) {
+          if (containerRef.current && todayContainer) {
             // Calculate scroll position to show today's container
             const containerRect = containerRef.current.getBoundingClientRect();
             const todayRect = todayContainer.getBoundingClientRect();

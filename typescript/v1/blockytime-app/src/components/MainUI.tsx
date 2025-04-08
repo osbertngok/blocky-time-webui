@@ -21,12 +21,8 @@ const keyToTimestamp = (key: string): number => {
 }
 
 export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProps>((_props, ref) => {
-  const timeTableContainerRef = useRef<HTMLDivElement>(null);
+  const timeTableContainerRef = useRef<HTMLDivElement | null>(null);
   const timeTableRef = useRef<{ setCurrentDate: (date: Date) => void }>(null);
-  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null); 
-  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
-  const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [config, setConfig] = useState<BlockyTimeConfig>({
     mainTimePrecision: "QUARTER_HOUR",
@@ -119,8 +115,6 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   };
 
   const handleTypeSelect = async (typeUid: number, projectUid?: number | null) => {
-    setSelectedTypeUid(typeUid);
-    setSelectedProjectUid(projectUid || null);
 
     const blocksToUpsert: BlockModel[] = Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
       return {
@@ -251,8 +245,6 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
         <TimeTable 
           ref={timeTableRef}
           containerRef={timeTableContainerRef}
-          selectedTypeUid={selectedTypeUid}
-          selectedProjectUid={selectedProjectUid}
         />
       </div>
       <div className="type-selector-container">
