@@ -11,7 +11,7 @@ import {
   updateDragSelection, 
   endDragSelection 
 } from '../store/selectionSlice';
-import { BlockyTimeConfig } from '../models/blockytimeconfig';
+import { BlockyTimeConfig, TimePrecision } from '../models/blockytimeconfig';
 
 interface TimeTableProps {
   initialDate?: Date; // Optional initial date
@@ -27,7 +27,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   selectedProjectUid // eslint-disable-line @typescript-eslint/no-unused-vars
 }, ref) => {
   const [config, setConfig] = useState<BlockyTimeConfig>({
-    mainTimePrecision: 1, // 1 == 15 min, 2 == 30 min
+    mainTimePrecision: "QUARTER_HOUR",
     disablePixelate: false,
     specialTimePeriod: []
   });
@@ -326,7 +326,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     
     // Set a timeout to detect long press
     longPressTimeoutRef.current = setTimeout(() => {
-      if (config.mainTimePrecision === 2) {
+      if (config.mainTimePrecision === "HALF_HOUR") {
         // For 30-minute blocks, select both the current block and the next 15-minute block
         const firstBlock = blockId;
         dispatch(startDragSelection({ block: firstBlock, isHalfHour: true }));
@@ -338,7 +338,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   
   const handleBlockMouseMove = (blockId: TimeBlockId) => {
     if (isDragging && isMouseDown) {
-      if (config.mainTimePrecision === 2) {
+      if (config.mainTimePrecision === "HALF_HOUR") {
         // For 30-minute blocks, update with both blocks
         const firstBlock = blockId;
         dispatch(updateDragSelection({ block: firstBlock, isHalfHour: true }));
@@ -361,7 +361,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       dispatch(endDragSelection());
     } else {
       // If not dragging, it was a simple click - toggle selection
-      if (config.mainTimePrecision === 2) {
+      if (config.mainTimePrecision === "HALF_HOUR") {
         // For 30-minute blocks, toggle both blocks
         const firstBlock = blockId;
         dispatch(toggleBlockSelection({ block: firstBlock, isHalfHour: true }));
@@ -441,7 +441,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   };
 
   // Render a single time block cell
-  const renderTimeBlock = (dateStr: string, hour: number, minute: number, _timePrecision: number) => {
+  const renderTimeBlock = (dateStr: string, hour: number, minute: number, _timePrecision: string) => {
     const blocksByTime = getBlocksByTime(dateStr);
     const key = `${hour}:${minute}`;
     const block = blocksByTime[key];
@@ -541,7 +541,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     for (let hour = 0; hour < 24; hour++) {
       const hourLabel = hour.toString().padStart(2, '0');
 
-      if (config.mainTimePrecision === 1) {
+      if (config.mainTimePrecision === "QUARTER_HOUR") {
       
         // Create quarter-hour blocks for this hour
         const quarterHourBlocks = [];
@@ -559,7 +559,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
             </div>
           </div>
         );
-      } else {
+      } else if (config.mainTimePrecision === "HALF_HOUR") {
         // Create half-hour blocks for this hour
         const halfHourBlocks = [];
         for (let minute = 0; minute < 60; minute += 30) {

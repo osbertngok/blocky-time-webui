@@ -165,4 +165,5 @@ fe-scss:
 
 .PHONY: fe-lint
 fe-lint:
+	@cd typescript/v1/blockytime-app && npm run check
 	@cd typescript/v1/blockytime-app && npm run lint

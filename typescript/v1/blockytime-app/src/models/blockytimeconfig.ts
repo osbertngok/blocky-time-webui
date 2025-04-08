@@ -1,5 +1,7 @@
+
+export type TimePrecision = "ROUGH" | "HALF_HOUR" | "QUARTER_HOUR";
 export interface BlockyTimeConfig {
-    mainTimePrecision: number;
+    mainTimePrecision: TimePrecision;
     disablePixelate: boolean;
     specialTimePeriod: [number, number][];
 }

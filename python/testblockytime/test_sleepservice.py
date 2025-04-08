@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import List
 
 from blockytime.dtos.sleep_dto import SleepStatsDTO
@@ -28,8 +28,9 @@ class TestSleepService:
 
     def test_get_sleep_stats(self, engine: Engine) -> None:
         # Get blocks from the engine
+        tomorrow = date.today() + timedelta(days=1)
         sleep_stats: List[SleepStatsDTO] = SleepService(engine).get_sleep_stats(
-            date(2025, 1, 1), date(2025, 4, 6)
+            date(2025, 1, 1), tomorrow
         )
         # Plot sleep duration using matplotlib
         import matplotlib.pyplot as plt

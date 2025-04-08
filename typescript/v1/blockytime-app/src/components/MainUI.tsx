@@ -20,14 +20,14 @@ const keyToTimestamp = (key: string): number => {
   return new Date(`${year}-${month}-${day}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`).getTime() / 1000;
 }
 
-export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProps>((props, ref) => {
+export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProps>((_props, ref) => {
   const timeTableContainerRef = useRef<HTMLDivElement>(null);
   const timeTableRef = useRef<{ setCurrentDate: (date: Date) => void }>(null);
   const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [config, setConfig] = useState<BlockyTimeConfig>({
-    mainTimePrecision: 1,
+    mainTimePrecision: "QUARTER_HOUR",
     disablePixelate: false,
     specialTimePeriod: []
   });
@@ -51,7 +51,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   }, [configService]);
 
   // Count selected blocks, adjusting for 30-minute precision
-  const displayBlockCount = config.mainTimePrecision === 2 
+  const displayBlockCount = config.mainTimePrecision === "HALF_HOUR"
     ? Math.ceil(Object.keys(selectedBlocks).length / 2)  // Show half the number for 30-minute blocks
     : Object.keys(selectedBlocks).length;  // Show actual count for 15-minute blocks
   
@@ -257,7 +257,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
       {/* Fixed selection info at bottom of screen */}
       {displayBlockCount > 0 && (
         <div className="selection-info-fixed">
-          <span>{displayBlockCount} {config.mainTimePrecision === 2 ? 'half-hour' : 'quarter-hour'} block{displayBlockCount !== 1 ? 's' : ''} selected</span>
+          <span>{displayBlockCount} {config.mainTimePrecision === "HALF_HOUR" ? 'half-hour' : 'quarter-hour'} block{displayBlockCount !== 1 ? 's' : ''} selected</span>
           <div className="selection-buttons">
             <button 
               className="delete-button" 

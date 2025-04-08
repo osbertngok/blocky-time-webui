@@ -12,6 +12,10 @@ export class ConfigService implements ConfigServiceInterface {
     async getConfigAsync(): Promise<BlockyTimeConfig> {
         const response = await fetch(`${this.apiBaseUrl}/configs`);
         const data = await response.json();
-        return data.data as BlockyTimeConfig;
+        return {
+          mainTimePrecision: data.mainTimePrecision == 0 ? "ROUGH" : data.mainTimePrecision == 1 ? "HALF_HOUR" : "QUARTER_HOUR",
+          disablePixelate: data.disablePixelate,
+          specialTimePeriod: data.specialTimePeriod as [number, number][],
+        };
     }
 }
