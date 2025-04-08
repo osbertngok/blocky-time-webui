@@ -1,11 +1,13 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Tuple
 from enum import Enum
+from typing import Any, Dict, List, Tuple
+
 
 class TimePrecision(Enum):
     Rough = 0
     HalfHour = 1
     QuarterHour = 2
+
 
 @dataclass
 class BlockyTimeConfig:

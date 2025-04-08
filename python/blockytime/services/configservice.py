@@ -4,13 +4,16 @@ from blockytime.models.config import Config
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+
 class ConfigService(ConfigServiceInterface):
     def __init__(self, engine: Engine):
         self.engine = engine
 
     def get_config(self) -> BlockyTimeConfig:
         ret = BlockyTimeConfig(
-            main_time_precision=TimePrecision.HalfHour, disable_pixelate=False, special_time_period=[]
+            main_time_precision=TimePrecision.HalfHour,
+            disable_pixelate=False,
+            special_time_period=[],
         )
         with Session(self.engine) as session:
             configs = session.query(Config).all()
