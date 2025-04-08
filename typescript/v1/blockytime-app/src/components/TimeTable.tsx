@@ -53,7 +53,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
 
   // Set today's date when component mounts
   useEffect(() => {
-    console.log("Setting current date to today in TimeTable");
     setCurrentDate(new Date());
   }, []);
 
@@ -183,13 +182,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
             // Scroll to position
             containerRef.current.scrollTop = scrollTop;
             initialScrollCompleted.current = true;
-            
-            console.log('Initial scroll completed:', {
-              today,
-              scrollTop,
-              containerTop: containerRect.top,
-              todayTop: todayRect.top
-            });
           }
         });
       });
@@ -198,7 +190,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
 
   // Function to refresh all visible dates
   const refreshVisibleDates = useCallback(() => {
-    console.log('Refreshing visible dates:', visibleDates);
     
     // Get current visible dates from state
     const currentVisibleDates = [...visibleDates];
@@ -245,7 +236,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   useEffect(() => {
     // Only refresh if the counter has actually changed and is greater than the previous value
     if (refreshCounter > prevRefreshCounterRef.current) {
-      console.log('Refresh counter changed:', refreshCounter, 'Previous:', prevRefreshCounterRef.current);
       refreshVisibleDates();
       prevRefreshCounterRef.current = refreshCounter;
     }

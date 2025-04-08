@@ -13,9 +13,9 @@ export class ConfigService implements ConfigServiceInterface {
         const response = await fetch(`${this.apiBaseUrl}/configs`);
         const data = await response.json();
         return {
-          mainTimePrecision: data.mainTimePrecision == 0 ? "ROUGH" : data.mainTimePrecision == 1 ? "HALF_HOUR" : "QUARTER_HOUR",
-          disablePixelate: data.disablePixelate,
-          specialTimePeriod: data.specialTimePeriod as [number, number][],
+          mainTimePrecision: data.data.mainTimePrecision === 0 ? "ROUGH" : data.data.mainTimePrecision === 1 ? "HALF_HOUR" : "QUARTER_HOUR",
+          disablePixelate: data.data.disablePixelate,
+          specialTimePeriod: data.data.specialTimePeriod as [number, number][],
         };
     }
 }
