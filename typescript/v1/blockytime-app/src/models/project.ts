@@ -17,12 +17,12 @@ import { BaseModel } from './base';
  * ```
  */
 export interface ProjectModel extends BaseModel {
-    name: string;
-    abbr: string;
-    acronym: string;
-    latin: string;
+    name?: string;
+    abbr?: string;
+    acronym?: string;
+    latin?: string;
     hidden?: boolean;
-    classify_uid: number;
-    taglist: string;
+    classify_uid?: number;
+    taglist?: string;
     priority?: number;
 } 

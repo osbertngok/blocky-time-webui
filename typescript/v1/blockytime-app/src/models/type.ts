@@ -41,7 +41,7 @@ import { ProjectModel } from './project';
  * ```
  */
 export interface TypeModel extends BaseModel {
-    name: string;
+    name?: string;
     color?: number;
     hidden?: boolean;
     priority?: number;

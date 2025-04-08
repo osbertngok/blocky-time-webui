@@ -8,7 +8,7 @@ import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceHooks';
 import { useConfigService } from '../contexts/ServiceHooks';
 import { BlockyTimeConfig } from '../models/blockytimeconfig';
-
+import { BlockModel } from '../models/block';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface MainUIProps {
@@ -23,7 +23,9 @@ const keyToTimestamp = (key: string): number => {
 export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProps>((_props, ref) => {
   const timeTableContainerRef = useRef<HTMLDivElement>(null);
   const timeTableRef = useRef<{ setCurrentDate: (date: Date) => void }>(null);
-  const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null);
+  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
+  const [selectedTypeUid, setSelectedTypeUid] = useState<number | null>(null); 
+  // eslint-disable-next-line  @typescript-eslint/no-unused-vars
   const [selectedProjectUid, setSelectedProjectUid] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [config, setConfig] = useState<BlockyTimeConfig>({
@@ -120,7 +122,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
     setSelectedTypeUid(typeUid);
     setSelectedProjectUid(projectUid || null);
 
-    const blocksToUpsert = Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
+    const blocksToUpsert: BlockModel[] = Object.entries(selectedBlocks).filter(([_, value]) => !!value).map(([key, _]) => {
       return {
         date: keyToTimestamp(key),
         type_: {
@@ -156,11 +158,13 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
       setIsDeleting(true);
       
       // Create an array of block models with delete operation
-      const blocksToDelete = Object.entries(selectedBlocks)
+      const blocksToDelete: BlockModel[] = Object.entries(selectedBlocks)
         .filter(([_, value]) => !!value)
         .map(([key, _]) => {
           return {
             date: keyToTimestamp(key),
+            type_: null,
+            project: null,
             comment: '',
             operation: 'delete' as const,
           };

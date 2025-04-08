@@ -50,7 +50,7 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
     }
   };
 
-  const handleToggleExpand = (typeUid: number | undefined, e: React.MouseEvent) => {
+  const handleToggleExpand = (typeUid: number | undefined, _e: React.MouseEvent) => {
     if (isValidTypeUid(typeUid)) {
       setExpandedTypes(prev => ({
         ...prev,

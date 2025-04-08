@@ -32,8 +32,8 @@ Sample JSON
 */
 export interface BlockModel extends BaseModel {
     date: number;  // Unix timestamp
-    type_?: TypeModel;  // Optional type
-    project?: ProjectModel;  // Optional project
+    type_: TypeModel | null;  // Optional type
+    project: ProjectModel | null;  // Optional project
     comment: string;
     operation?: 'upsert' | 'delete';
 }
