@@ -61,18 +61,19 @@ class TestSleepService:
         end_hours = np.array([x[2] for x in sime_day_tuple])
         durations = np.array([x[3] for x in sime_day_tuple])
 
-        # Calculate moving averages
-        window_size = 7
-        start_moving_avg = np.convolve(
-            start_hours, np.ones(window_size) / window_size, mode="valid"
-        )
-        end_moving_avg = np.convolve(
-            end_hours, np.ones(window_size) / window_size, mode="valid"
-        )
-        duration_moving_avg = np.convolve(
-            durations, np.ones(window_size) / window_size, mode="valid"
-        )
-        moving_avg_dates = dates[window_size - 1 :]  # Align dates with moving average
+        # Calculate exponentially weighted moving averages
+        decay_factor = 0.75
+        window_size = 14
+        
+        def ewma(data):
+            weights = np.array([decay_factor ** i for i in range(window_size)][::-1])
+            weights = weights / weights.sum()  # Normalize weights to sum to 1
+            return np.convolve(data, weights, mode="valid")
+        
+        start_moving_avg = ewma(start_hours)
+        end_moving_avg = ewma(end_hours)
+        duration_moving_avg = ewma(durations)
+        moving_avg_dates = dates[window_size - 1:]  # Align dates with moving average
 
         # Create the plot with two y-axes
         fig, ax1 = plt.subplots(figsize=(12, 6))
