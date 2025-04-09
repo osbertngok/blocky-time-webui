@@ -235,21 +235,10 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
     scrollToCurrentTime
   }));
 
-  const handleHeaderDoubleClick = () => {
-    if (timeTableRef.current) {
-      const now = new Date();
-      timeTableRef.current.setCurrentDate(now);
-    }
-  };
-
   return (
     <div className="main-ui">
-      <div 
-        className="time-table-container" 
-        ref={timeTableContainerRef}
-        onScroll={handleScroll}
-      >
-        <TimeTable 
+      <div className="time-table-container" ref={timeTableContainerRef} onScroll={handleScroll}>
+        <TimeTable
           ref={timeTableRef}
           containerRef={timeTableContainerRef}
         />

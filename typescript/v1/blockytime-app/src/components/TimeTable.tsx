@@ -59,9 +59,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     return `${year}-${month}-${day}`;
   }, []);
 
-  // Add a ref to track what date is currently visible
-  const currentlyVisibleDateRef = useRef<string | null>(null);
-
   // Expose setCurrentDate to parent components
   useImperativeHandle(ref, () => ({
     setCurrentDate: (date: Date) => {
@@ -74,7 +71,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       initialFetchRef.current = false;
       initialScrollCompleted.current = false;
     }
-  }), [formatDateString]);
+  }), []);
 
   // Set today's date when component mounts
   useEffect(() => {
