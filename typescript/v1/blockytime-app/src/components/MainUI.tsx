@@ -236,18 +236,9 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   }));
 
   const handleHeaderDoubleClick = () => {
-    console.log('[MainUI] Header double-clicked');
     if (timeTableRef.current) {
       const now = new Date();
-      console.log('[MainUI] Setting current date to:', {
-        date: now,
-        dateString: now.toISOString(),
-        hours: now.getHours(),
-        minutes: now.getMinutes()
-      });
       timeTableRef.current.setCurrentDate(now);
-    } else {
-      console.error('[MainUI] TimeTable ref is not found');
     }
   };
 

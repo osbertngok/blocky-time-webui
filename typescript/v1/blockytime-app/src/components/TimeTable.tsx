@@ -65,13 +65,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   // Expose setCurrentDate to parent components
   useImperativeHandle(ref, () => ({
     setCurrentDate: (date: Date) => {
-      console.log("[TimeTable] setCurrentDate called with:", {
-        date,
-        dateString: formatDateString(date),
-        hours: date.getHours(),
-        minutes: date.getMinutes()
-      });
-      
       // Create a new date at the start of the day
       const newDate = new Date(date);
       newDate.setHours(0, 0, 0, 0);
@@ -85,7 +78,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
 
   // Set today's date when component mounts
   useEffect(() => {
-    console.log("[TimeTable] Setting current date to today");
     setCurrentDate(new Date());
   }, []);
 
@@ -159,8 +151,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
 
   // Handle currentDate changes
   useEffect(() => {
-    console.log("[TimeTable] currentDate changed to:", currentDate, "formatted:", formatDateString(currentDate));
-    
     const dates = getDateRange(currentDate);
     prefetchBlocks(dates);
     
@@ -177,7 +167,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       formatDateString(tomorrow)
     ];
     
-    console.log("[TimeTable] Setting new visible dates:", newVisibleDates);
     setVisibleDates(newVisibleDates);
   }, [currentDate, prefetchBlocks, formatDateString]);
 
@@ -185,24 +174,13 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   useEffect(() => {
     if (!initialScrollCompleted.current && containerRef?.current) {
       const targetDateStr = formatDateString(currentDate);
-      console.log("[TimeTable] Attempting to scroll to date:", {
-        targetDate: targetDateStr,
-        currentDate,
-        visibleDates
-      });
       
       // Use a small timeout to ensure the DOM is ready
       setTimeout(() => {
         requestAnimationFrame(() => {
-          console.log("[TimeTable] Looking for container with date:", targetDateStr);
           const targetContainer = containerRef.current?.querySelector(`[data-date="${targetDateStr}"]`);
           
           if (targetContainer && containerRef.current) {
-            // Get all date containers for logging
-            const allContainers = containerRef.current.querySelectorAll('[data-date]');
-            console.log("[TimeTable] Available date containers:", 
-              Array.from(allContainers).map(el => el.getAttribute('data-date')));
-
             const containerRect = containerRef.current.getBoundingClientRect();
             const targetRect = targetContainer.getBoundingClientRect();
             
@@ -210,37 +188,8 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
             const topOffset = 80; // pixels from top
             const newScrollTop = targetRect.top - containerRect.top + containerRef.current.scrollTop - topOffset;
             
-            console.log("[TimeTable] Scroll calculation:", {
-              containerTop: containerRect.top,
-              targetTop: targetRect.top,
-              currentScrollTop: containerRef.current.scrollTop,
-              calculatedScrollTop: newScrollTop,
-              topOffset
-            });
-            
             containerRef.current.scrollTop = newScrollTop;
             initialScrollCompleted.current = true;
-            
-            // Verify the final position
-            requestAnimationFrame(() => {
-              if (containerRef.current && targetContainer) {
-                const finalRect = targetContainer.getBoundingClientRect();
-                const finalContainerRect = containerRef.current.getBoundingClientRect();
-                console.log("[TimeTable] Final positions:", {
-                  targetDate: targetDateStr,
-                  targetFinalTop: finalRect.top,
-                  containerFinalTop: finalContainerRect.top,
-                  actualOffset: finalRect.top - finalContainerRect.top,
-                  desiredOffset: topOffset
-                });
-              }
-            });
-          } else {
-            console.error("[TimeTable] Target container not found:", {
-              targetDate: targetDateStr,
-              containerExists: !!containerRef.current,
-              targetExists: !!targetContainer
-            });
           }
         });
       }, 50);
