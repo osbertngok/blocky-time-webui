@@ -51,22 +51,42 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   // Add a ref to track if we've done the initial fetch
   const initialFetchRef = useRef(false);
 
-  // Set today's date when component mounts
-  useEffect(() => {
-    setCurrentDate(new Date());
-  }, []);
-
-  // Expose setCurrentDate to parent components
-  useImperativeHandle(ref, () => ({
-    setCurrentDate
-  }));
-
   // Format date as YYYY-MM-DD
   const formatDateString = useCallback((date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }, []);
+
+  // Add a ref to track what date is currently visible
+  const currentlyVisibleDateRef = useRef<string | null>(null);
+
+  // Expose setCurrentDate to parent components
+  useImperativeHandle(ref, () => ({
+    setCurrentDate: (date: Date) => {
+      console.log("[TimeTable] setCurrentDate called with:", {
+        date,
+        dateString: formatDateString(date),
+        hours: date.getHours(),
+        minutes: date.getMinutes()
+      });
+      
+      // Create a new date at the start of the day
+      const newDate = new Date(date);
+      newDate.setHours(0, 0, 0, 0);
+      
+      setCurrentDate(newDate);
+      // Reset both flags to force a new fetch and scroll
+      initialFetchRef.current = false;
+      initialScrollCompleted.current = false;
+    }
+  }), [formatDateString]);
+
+  // Set today's date when component mounts
+  useEffect(() => {
+    console.log("[TimeTable] Setting current date to today");
+    setCurrentDate(new Date());
   }, []);
 
   // Get a range of dates (±10 days from current date)
@@ -139,54 +159,93 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
 
   // Handle currentDate changes
   useEffect(() => {
-    // Skip if we've already done the initial fetch
-    if (initialFetchRef.current) {
-      return;
-    }
+    console.log("[TimeTable] currentDate changed to:", currentDate, "formatted:", formatDateString(currentDate));
     
     const dates = getDateRange(currentDate);
     prefetchBlocks(dates);
     
+    // Always set visible dates centered on the current date
+    const currentDateStr = formatDateString(currentDate);
     const yesterday = new Date(currentDate);
     yesterday.setDate(yesterday.getDate() - 1);
-    
     const tomorrow = new Date(currentDate);
     tomorrow.setDate(tomorrow.getDate() + 1);
     
-    const initialVisibleDates = [
+    const newVisibleDates = [
       formatDateString(yesterday),
-      formatDateString(currentDate),
+      currentDateStr,
       formatDateString(tomorrow)
     ];
     
-    setVisibleDates([...new Set(initialVisibleDates)]);
-    initialFetchRef.current = true;
+    console.log("[TimeTable] Setting new visible dates:", newVisibleDates);
+    setVisibleDates(newVisibleDates);
   }, [currentDate, prefetchBlocks, formatDateString]);
 
   // Handle initial scroll - runs once
   useEffect(() => {
     if (!initialScrollCompleted.current && containerRef?.current) {
-      const today = formatDateString(new Date());
+      const targetDateStr = formatDateString(currentDate);
+      console.log("[TimeTable] Attempting to scroll to date:", {
+        targetDate: targetDateStr,
+        currentDate,
+        visibleDates
+      });
       
-      // Use requestAnimationFrame to ensure DOM is updated
-      requestAnimationFrame(() => {
-        // Use another RAF to ensure the dates are rendered
+      // Use a small timeout to ensure the DOM is ready
+      setTimeout(() => {
         requestAnimationFrame(() => {
-          const todayContainer = containerRef.current?.querySelector(`[data-date="${today}"]`);
-          if (containerRef.current && todayContainer) {
-            // Calculate scroll position to show today's container
+          console.log("[TimeTable] Looking for container with date:", targetDateStr);
+          const targetContainer = containerRef.current?.querySelector(`[data-date="${targetDateStr}"]`);
+          
+          if (targetContainer && containerRef.current) {
+            // Get all date containers for logging
+            const allContainers = containerRef.current.querySelectorAll('[data-date]');
+            console.log("[TimeTable] Available date containers:", 
+              Array.from(allContainers).map(el => el.getAttribute('data-date')));
+
             const containerRect = containerRef.current.getBoundingClientRect();
-            const todayRect = todayContainer.getBoundingClientRect();
-            const scrollTop = todayRect.top - containerRect.top + containerRef.current.scrollTop;
+            const targetRect = targetContainer.getBoundingClientRect();
             
-            // Scroll to position
-            containerRef.current.scrollTop = scrollTop;
+            // Position the target date at the top with a small offset
+            const topOffset = 80; // pixels from top
+            const newScrollTop = targetRect.top - containerRect.top + containerRef.current.scrollTop - topOffset;
+            
+            console.log("[TimeTable] Scroll calculation:", {
+              containerTop: containerRect.top,
+              targetTop: targetRect.top,
+              currentScrollTop: containerRef.current.scrollTop,
+              calculatedScrollTop: newScrollTop,
+              topOffset
+            });
+            
+            containerRef.current.scrollTop = newScrollTop;
             initialScrollCompleted.current = true;
+            
+            // Verify the final position
+            requestAnimationFrame(() => {
+              if (containerRef.current && targetContainer) {
+                const finalRect = targetContainer.getBoundingClientRect();
+                const finalContainerRect = containerRef.current.getBoundingClientRect();
+                console.log("[TimeTable] Final positions:", {
+                  targetDate: targetDateStr,
+                  targetFinalTop: finalRect.top,
+                  containerFinalTop: finalContainerRect.top,
+                  actualOffset: finalRect.top - finalContainerRect.top,
+                  desiredOffset: topOffset
+                });
+              }
+            });
+          } else {
+            console.error("[TimeTable] Target container not found:", {
+              targetDate: targetDateStr,
+              containerExists: !!containerRef.current,
+              targetExists: !!targetContainer
+            });
           }
         });
-      });
+      }, 50);
     }
-  }, [containerRef, formatDateString]); // Only run when containerRef changes and not mounted
+  }, [containerRef, formatDateString, currentDate, visibleDates]);
 
   // Function to refresh all visible dates
   const refreshVisibleDates = useCallback(() => {
