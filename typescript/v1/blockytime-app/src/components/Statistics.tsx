@@ -88,7 +88,7 @@ export const Statistics: React.FC = () => {
         };
       case 'since-inception':
         return {
-          start: new Date(2020, 0, 1), // Adjust this to your actual inception date
+          start: new Date(2000, 1, 1), // Adjust this to your actual inception date
           end: today,
           canNavigate: false
         };

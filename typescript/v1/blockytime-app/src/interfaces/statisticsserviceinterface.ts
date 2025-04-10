@@ -2,7 +2,7 @@ import { TypeModel } from '../models/type';
 
 export interface StatsData {
   type: TypeModel;
-  duration: number;  // in seconds
+  duration: number;  // in hours
 }
 
 export interface StatsServiceInterface {
