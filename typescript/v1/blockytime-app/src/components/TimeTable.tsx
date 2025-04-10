@@ -78,13 +78,13 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     setCurrentDate(new Date());
   }, []);
 
-  // Get a range of dates (±10 days from current date)
+  // Get a range of dates (±3 days from current date)
   const getDateRange = (centerDate: Date): Date[] => {
     const dates: Date[] = [];
     const center = new Date(centerDate);
     
     // Add dates before the center date
-    for (let i = 10; i > 0; i--) {
+    for (let i = 3; i > 0; i--) {
       const date = new Date(center);
       date.setDate(date.getDate() - i);
       dates.push(date);
@@ -94,7 +94,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     dates.push(new Date(center));
     
     // Add dates after the center date
-    for (let i = 1; i <= 10; i++) {
+    for (let i = 1; i <= 3; i++) {
       const date = new Date(center);
       date.setDate(date.getDate() + i);
       dates.push(date);
