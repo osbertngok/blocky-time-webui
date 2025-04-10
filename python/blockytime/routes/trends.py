@@ -4,13 +4,14 @@ from typing import List, Tuple
 import time
 import gzip
 import json
+from enum import Enum
 
 import pytz
 from flask import Blueprint, jsonify, request, make_response
 
 from ..dtos.trenditem_dto import TrendItemDTO
 from ..dtos.type_dto import TypeDTO
-from ..interfaces.trendserviceinterface import TrendServiceInterface
+from ..interfaces.trendserviceinterface import TrendServiceInterface, TrendGroupBy
 from ..routes.decorators import RouteReturn, inject_trendservice
 
 
@@ -37,6 +38,15 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
         if end_date_str is None:
             return jsonify({"error": "end_date is required"}), 400
 
+        group_by: str | None = request.args.get("group_by")
+        if group_by is None:
+            return jsonify({"error": "group_by is required"}), 400
+        
+        try:
+            group_by_enum: TrendGroupBy = TrendGroupBy(group_by)
+        except ValueError:
+            return jsonify({"error": f"Invalid group_by: {group_by}"}), 400
+
         # Parse dates and localize to GMT+8
         tz = pytz.timezone("Asia/Singapore")
         start_date = tz.localize(datetime.strptime(start_date_str, "%Y-%m-%d"))
@@ -46,7 +56,7 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
-        trends: List[Tuple[TypeDTO, List[TrendItemDTO]]] = trend_service.get_trends(start_date, end_date)
+        trends: List[Tuple[TypeDTO, List[TrendItemDTO]]] = trend_service.get_trends(start_date, end_date, group_by_enum)
         ret = {"data": [trend.to_dict() for trend in trends], "error": None}
         gzip_supported = 'gzip' in request.headers.get('Accept-Encoding','').lower()
         if gzip_supported:

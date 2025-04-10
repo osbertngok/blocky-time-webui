@@ -9,6 +9,7 @@ from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..interfaces.configserviceinterface import ConfigServiceInterface
 from ..interfaces.typeserviceinterface import TypeServiceInterface
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
+from ..interfaces.trendserviceinterface import TrendServiceInterface
 from ..services.di import FlaskWithServiceProvider, get_service_provider
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]

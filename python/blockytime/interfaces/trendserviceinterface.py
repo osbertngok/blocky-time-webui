@@ -1,15 +1,14 @@
-from datetime import datetime
-from typing import List, Protocol, Tuple
-from ..dtos.trenditem_dto import TrendItemDTO
-from ..dtos.type_dto import TypeDTO
+from typing import List, Protocol
+from ..dtos.trenditem_dto import TrendDataDTO
 from enum import Enum
+from datetime import date
 
 class TrendGroupBy(Enum):
-    DAY = "day"
-    WEEK = "week"
-    MONTH = "month"
+    DAY = "DAY"
+    WEEK = "WEEK"
+    MONTH = "MONTH"
 
 class TrendServiceInterface(Protocol):
 
-    def get_trends(self, start_date: datetime, end_date: datetime, group_by: TrendGroupBy) -> List[Tuple[TypeDTO, List[TrendItemDTO]]]:
+    def get_trends(self, start_date: date, end_date: date, group_by: TrendGroupBy) -> List[TrendDataDTO]:
         ...

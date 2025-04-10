@@ -1,8 +1,8 @@
 import { TypeModel } from "./type";
 
 export interface TrendItemModel {
-    type_: TypeModel;
+    type: TypeModel;
     duration: number;
-    time: string;
+    timeLabel: string;
 }
 
