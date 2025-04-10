@@ -82,3 +82,16 @@ def inject_statisticsservice(f: Callable[..., R]) -> Callable[..., R]:
         return f(statistics_service=service, *args, **kwargs)
 
     return wrapper
+
+def inject_trendservice(f: Callable[..., R]) -> Callable[..., R]:
+    """Inject trend service as named argument"""
+
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> R:
+        service_provider = get_service_provider(
+            cast(FlaskWithServiceProvider, current_app)
+        )
+        service = service_provider.get(TrendServiceInterface)  # type: ignore
+        return f(trend_service=service, *args, **kwargs)
+    
+    return wrapper
