@@ -15,6 +15,7 @@ from .interfaces.blockserviceinterface import BlockServiceInterface
 from .interfaces.configdict import ConfigDict
 from .interfaces.configserviceinterface import ConfigServiceInterface
 from .interfaces.typeserviceinterface import TypeServiceInterface
+from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
 from .routes import blocks, configs, types
@@ -23,6 +24,7 @@ from .services.blockservice import BlockService
 from .services.configservice import ConfigService
 from .services.di import FlaskWithServiceProvider, ServiceProvider
 from .services.typeservice import TypeService
+from .services.statisticsservice import StatisticsService
 
 # Configure logging
 logging.basicConfig(
@@ -135,6 +137,7 @@ def create_app() -> Flask:
     service_provider.register(BlockServiceInterface, BlockService(engine))  # type: ignore
     service_provider.register(TypeServiceInterface, TypeService(engine))  # type: ignore
     service_provider.register(ConfigServiceInterface, ConfigService(engine))  # type: ignore
+    service_provider.register(StatisticsServiceInterface, StatisticsService(engine))  # type: ignore
     service_provider.register(ConfigDict, app.config)
 
     # Define static file routes
