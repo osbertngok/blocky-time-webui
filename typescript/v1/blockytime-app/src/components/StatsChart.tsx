@@ -12,6 +12,7 @@ import {
 import { Pie, Bar } from 'react-chartjs-2';
 import { useStatsService } from '../contexts/ServiceHooks';
 import { StatsData } from "../interfaces/statisticsserviceinterface";
+import { getColorFromDecimal } from '../utils';
 
 ChartJS.register(
   ArcElement,
@@ -56,17 +57,12 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
     fetchData();
   }, [startDate, endDate, statsService]);
 
-  const formatDuration = (seconds: number): string => {
-    const hours = Math.floor(seconds / 3600);
-    return `${hours} hours`;
-  };
-
   const chartData = {
     labels: data.map(item => item.type.name || 'Unknown'),
     datasets: [
       {
-        data: data.map(item => item.duration / 3600), // Convert to hours
-        backgroundColor: data.map(item => item.type.color || '#cccccc'),
+        data: data.map(item => item.duration),
+        backgroundColor: data.map(item => getColorFromDecimal(item.type.color) || '#cccccc'),
         borderColor: 'rgba(255, 255, 255, 0.5)',
         borderWidth: 1,
       },

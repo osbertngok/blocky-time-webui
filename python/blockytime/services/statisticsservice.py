@@ -33,6 +33,7 @@ class StatisticsService(StatisticsServiceInterface):
                     Block.date < end_ts
                 )
                 .group_by(Block.type_uid)
+                .order_by((func.count(Block.date) * 0.25).label("duration").desc())
                 .all()
             )
             return [StatisticsDTO(

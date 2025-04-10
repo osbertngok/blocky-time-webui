@@ -12,6 +12,7 @@ import {
   endDragSelection 
 } from '../store/selectionSlice';
 import { BlockyTimeConfig } from '../models/blockytimeconfig';
+import { getColorFromDecimal } from '../utils';
 
 interface TimeTableProps {
   initialDate?: Date;
@@ -256,17 +257,6 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
       prevRefreshCounterRef.current = refreshCounter;
     }
   }, [refreshCounter, refreshVisibleDates]);
-
-  // Convert decimal color to CSS hex color
-  const getColorFromDecimal = (decimalColor?: number): string => {
-    if (decimalColor === undefined || decimalColor === null) {
-      return 'transparent';
-    }
-    
-    // Convert decimal to hex string and ensure it has 6 digits
-    const hexColor = decimalColor.toString(16).padStart(6, '0');
-    return `#${hexColor}`;
-  };
 
   // Organize blocks by hour and minute for easier lookup
   const getBlocksByTime = (dateStr: string) => {
