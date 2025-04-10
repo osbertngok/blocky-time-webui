@@ -1,8 +1,10 @@
-import { TypeModel } from "../models/type";
+import { TypeModel } from '../models/type';
 
-export interface StatisticsServiceInterface {
-  getStatistics(startDate: string, endDate: string): Promise<{
-    type: TypeModel;
-    duration: number;
-  }[]>;
+export interface StatsData {
+  type: TypeModel;
+  duration: number;  // in seconds
+}
+
+export interface StatsServiceInterface {
+  getStats(startDate: string, endDate: string): Promise<StatsData[]>;
 }

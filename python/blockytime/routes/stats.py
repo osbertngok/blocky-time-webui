@@ -14,7 +14,7 @@ from ..routes.decorators import RouteReturn, inject_statisticsservice
 
 log = logging.getLogger(__name__)
 
-bp = Blueprint("blocks", __name__)
+bp = Blueprint("stats", __name__)
 
 
 @bp.route("/api/v1/stats", methods=["GET"])

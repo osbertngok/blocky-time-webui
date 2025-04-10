@@ -1,20 +1,32 @@
-import { StatisticsServiceInterface } from "../interfaces/statisticsserviceinterface";
-import { TypeModel } from "../models/type";
+import { StatsData, StatsServiceInterface } from "../interfaces/statisticsserviceinterface";
 
-export class StatisticsService implements StatisticsServiceInterface {
+export class StatsService implements StatsServiceInterface {
+  private apiBaseUrl: string;
 
-    private apiBaseUrl: string;
+  constructor(apiBaseUrl: string = '/api/v1') {
+    this.apiBaseUrl = apiBaseUrl;
+  }
 
-    constructor(apiBaseUrl: string = '/api/v1') {
-      this.apiBaseUrl = apiBaseUrl;
+  async getStats(startDate: string, endDate: string): Promise<StatsData[]> {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/stats?start_date=${startDate}&end_date=${endDate}`
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      return result.data as StatsData[];
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      throw error;
     }
-
-    async getStatistics(startDate: string, endDate: string): Promise<{
-        type: TypeModel;
-        duration: number;
-      }[]> {
-        const response = await fetch(`${this.apiBaseUrl}/stats?startDate=${startDate}&endDate=${endDate}`);
-        const data = await response.json();
-        return data.data;
-    }
+  }
 }

@@ -2,11 +2,13 @@ import { createContext, useContext } from 'react';
 import { BlockServiceInterface } from '../services/blockservice';
 import { TypeServiceInterface } from '../services/typeservice';
 import { ConfigServiceInterface } from '../interfaces/configserviceinterface';
+import { StatsServiceInterface } from '../interfaces/statisticsserviceinterface';
 
 interface ServiceContextType {
     blockService: BlockServiceInterface;
     typeService: TypeServiceInterface;
     configService: ConfigServiceInterface;
+    statsService: StatsServiceInterface;
   }
   
   export const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
@@ -34,3 +36,11 @@ interface ServiceContextType {
     }
     return context.typeService;
   }; 
+
+  export const useStatsService = (): StatsServiceInterface => {
+    const context = useContext(ServiceContext);
+    if (!context) {
+      throw new Error('useStatsService must be used within a ServiceProvider');
+    }
+    return context.statsService;
+  };

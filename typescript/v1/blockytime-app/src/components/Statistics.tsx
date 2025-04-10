@@ -10,6 +10,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { format, addDays, subDays, startOfWeek, endOfWeek, 
          startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
+import { StatsChart } from './StatsChart';
 
 type ChartType = 'pie' | 'bar';
 type StatisticsType = 
@@ -191,7 +192,11 @@ export const Statistics: React.FC = () => {
       </div>
 
       <div className="chart-container">
-        {/* Chart component will be added here */}
+        <StatsChart
+          startDate={getDateRange().start}
+          endDate={getDateRange().end}
+          chartType={state.chartType}
+        />
       </div>
     </div>
   );

@@ -18,7 +18,7 @@ from .interfaces.typeserviceinterface import TypeServiceInterface
 from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
-from .routes import blocks, configs, types
+from .routes import blocks, configs, types, stats
 from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
@@ -154,6 +154,7 @@ def create_app() -> Flask:
     app.register_blueprint(blocks.bp)
     app.register_blueprint(types.bp)
     app.register_blueprint(configs.bp)
+    app.register_blueprint(stats.bp)
     # log.info("Registered company, namecard and auth routes")
 
     # Register routes
