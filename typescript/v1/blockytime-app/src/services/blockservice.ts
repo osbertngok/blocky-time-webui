@@ -6,11 +6,27 @@ export interface BlockServiceInterface {
   updateBlocks(blocks: BlockModel[]): Promise<boolean>;
 }
 
+class BlockCacheEntry {
+  blocks: BlockModel[];
+  validUntil: Date;
+
+  constructor(blocks: BlockModel[], validUntil: Date) {
+    this.blocks = blocks;
+    this.validUntil = validUntil;
+  }
+}
+
 export class BlockService implements BlockServiceInterface {
   private apiBaseUrl: string;
+  private cache: Record<string, BlockCacheEntry>;
 
   constructor(apiBaseUrl: string = '/api/v1') {
     this.apiBaseUrl = apiBaseUrl;
+    this.cache = {};
+  }
+
+  getCacheKey(startDateStr: string, endDateStr: string): string {
+    return startDateStr + '-' + endDateStr;
   }
 
   async getBlocks(startDate: Date, endDate: Date): Promise<BlockModel[]> {
@@ -26,6 +42,15 @@ export class BlockService implements BlockServiceInterface {
   }
 
   async getBlocksByDateString(startDateStr: string, endDateStr: string): Promise<BlockModel[]> {
+    // if cache entry is valid, return it
+    let cacheKey = this.getCacheKey(startDateStr, endDateStr);
+    if (this.cache[cacheKey]) {
+      let cache = this.cache[cacheKey]
+      if (cache.validUntil > new Date()) {
+        return cache.blocks;
+      }
+    }
+
     try {
       const response = await fetch(
         `${this.apiBaseUrl}/blocks?start_date=${startDateStr}&end_date=${endDateStr}`
@@ -41,7 +66,9 @@ export class BlockService implements BlockServiceInterface {
         throw new Error(result.error);
       }
       
-      return result.data as BlockModel[];
+      let ret = result.data as BlockModel[];
+      this.cache[cacheKey] = new BlockCacheEntry(ret, new Date(Date.now() + 1000));
+      return ret;
     } catch (error) {
       console.error('Error fetching blocks:', error);
       throw error;
@@ -72,6 +99,8 @@ export class BlockService implements BlockServiceInterface {
     } catch (error) {
       console.error('Error updating blocks:', error);
       throw error;
+    } finally {
+      this.cache = {};
     }
   }
 }

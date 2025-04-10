@@ -206,44 +206,43 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
   }, [containerRef, formatDateString, currentDate, visibleDates]);
 
   // Function to refresh all visible dates
-  const refreshVisibleDates = useCallback(() => {
+  const refreshVisibleDates = useCallback(async () => {
+    if (visibleDates.length === 0) return;
     
-    // Get current visible dates from state
-    const currentVisibleDates = [...visibleDates];
-    
-    // Fetch fresh data for all visible dates
-    currentVisibleDates.forEach(dateStr => {
-      const date = new Date(dateStr);
+    try {
+      setLoading(true);
       
-      // Use a direct fetch instead of the cached function to avoid dependency issues
-      const fetchDate = async () => {
-        try {
-          setLoading(true);
-          
-          // Create next day for end date
-          const nextDate = new Date(date);
-          nextDate.setDate(nextDate.getDate() + 1);
-          const endDateStr = formatDateString(nextDate);
-          
-          const fetchedBlocks = await blockService.getBlocksByDateString(
-            formatDateString(date), 
-            endDateStr
-          );
-          
-          // Update blocks with fresh data
-          setBlocks(prev => ({
-            ...prev,
-            [formatDateString(date)]: fetchedBlocks
-          }));
-        } catch (error) {
-          console.error(`Error refreshing blocks for ${formatDateString(date)}:`, error);
-        } finally {
-          setLoading(false);
+      // Convert date strings to Date objects and find min/max
+      const dates = visibleDates.map(dateStr => new Date(dateStr));
+      const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+      const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+      endDate.setDate(endDate.getDate() + 1); // Add one day to include the last date
+      
+      // Make a single API call
+      const fetchedBlocks = await blockService.getBlocks(startDate, endDate);
+      
+      // Organize blocks by date
+      const blocksByDate = fetchedBlocks.reduce((acc: Record<string, BlockModel[]>, block: BlockModel) => {
+        const date = new Date(block.date * 1000);
+        const dateStr = formatDateString(date);
+        
+        if (!acc[dateStr]) {
+          acc[dateStr] = [];
         }
-      };
+        acc[dateStr].push(block);
+        return acc;
+      }, {});
       
-      fetchDate();
-    });
+      // Update all blocks in one go
+      setBlocks(prev => ({
+        ...prev,
+        ...blocksByDate
+      }));
+    } catch (error) {
+      console.error('Error refreshing blocks:', error);
+    } finally {
+      setLoading(false);
+    }
   }, [visibleDates, blockService, formatDateString]);
 
   // Add a ref to track the previous refresh counter value
