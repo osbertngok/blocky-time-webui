@@ -103,37 +103,49 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
     return dates;
   };
 
-  // Fetch blocks for a specific date - using useCallback to avoid dependency cycles
-  const fetchBlocksForDate = useCallback(async (date: Date) => {
-    const dateStr = formatDateString(date);
+  // Helper function to organize blocks by date
+  const organizeBlocksByDate = useCallback((blocks: BlockModel[]): Record<string, BlockModel[]> => {
+    return blocks.reduce((acc: Record<string, BlockModel[]>, block: BlockModel) => {
+      const date = new Date(block.date * 1000); // Convert timestamp to Date
+      const dateStr = formatDateString(date);
+      
+      if (!acc[dateStr]) {
+        acc[dateStr] = [];
+      }
+      acc[dateStr].push(block);
+      return acc;
+    }, {});
+  }, [formatDateString]);
+
+  // Fetch blocks for a range of dates
+  const prefetchBlocks = useCallback(async (dates: Date[]) => {
+    if (dates.length === 0) return;
     
     try {
       setLoading(true);
       
-      // Create next day for end date
-      const nextDate = new Date(date);
-      nextDate.setDate(nextDate.getDate() + 1);
-      const endDateStr = formatDateString(nextDate);
+      // Find the earliest and latest dates
+      const startDate = new Date(Math.min(...dates.map(d => d.getTime())));
+      const endDate = new Date(Math.max(...dates.map(d => d.getTime())));
+      endDate.setDate(endDate.getDate() + 1); // Add one day to include the last date
       
-      const fetchedBlocks = await blockService.getBlocksByDateString(dateStr, endDateStr);
+      // Make a single API call
+      const fetchedBlocks = await blockService.getBlocks(startDate, endDate);
       
+      // Organize blocks by date
+      const blocksByDate = organizeBlocksByDate(fetchedBlocks);
+      
+      // Update state with all fetched blocks
       setBlocks(prev => ({
         ...prev,
-        [dateStr]: fetchedBlocks
+        ...blocksByDate
       }));
     } catch (error) {
-      console.error(`Error fetching blocks for ${dateStr}:`, error);
+      console.error('Error fetching blocks:', error);
     } finally {
       setLoading(false);
     }
-  }, [blockService, formatDateString]);
-
-  // Prefetch blocks for a range of dates
-  const prefetchBlocks = useCallback(async (dates: Date[]) => {
-    for (const date of dates) {
-      await fetchBlocksForDate(date);
-    }
-  }, [fetchBlocksForDate]);
+  }, [blockService, organizeBlocksByDate]);
 
   // Change the fetchConfig function to be memoized
   const fetchConfig = useCallback(async () => {
@@ -593,7 +605,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
         
         // Only add if not already in the list
         if (!visibleDates.includes(prevDateStr)) {
-          fetchBlocksForDate(prevDate);
+          prefetchBlocks([prevDate]);
           
           // Create a new array with unique dates
           const newDates = [prevDateStr, ...visibleDates];
@@ -611,7 +623,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
         
         // Only add if not already in the list
         if (!visibleDates.includes(nextDateStr)) {
-          fetchBlocksForDate(nextDate);
+          prefetchBlocks([nextDate]);
           
           // Create a new array with unique dates
           const newDates = [...visibleDates, nextDateStr];
@@ -633,7 +645,7 @@ export const TimeTable = forwardRef<{ setCurrentDate: (date: Date) => void }, Ti
         container.removeEventListener('scroll', handleScroll);
       }
     };
-  }, [containerRef, visibleDates, blocks, fetchBlocksForDate, formatDateString]);
+  }, [containerRef, visibleDates, blocks, prefetchBlocks, formatDateString]);
 
   return (
     <div className="time-table">
