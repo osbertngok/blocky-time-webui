@@ -51,12 +51,24 @@
 
 .App-header {
   background-color: #282c34;
-  padding: 20px;
+  padding: 0 16px;
   color: white;
+  display: flex;
+  align-items: center;
 }
 
 main {
   flex: 1;
   width: 100%;
   overflow: hidden;
+}
+
+.sidebar-content {
+  width: 250px;
+  padding: 20px;
+}
+
+/* Ensure the menu icon is visible */
+.MuiIconButton-root {
+  color: inherit;
 }
