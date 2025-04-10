@@ -1,6 +1,6 @@
 import logging
-from datetime import datetime
-from typing import List
+from datetime import datetime, timedelta
+from typing import Dict, List, Tuple
 
 from blockytime.dtos.block_dto import BlockDTO
 from blockytime.interfaces.blockserviceinterface import BlockServiceInterface
@@ -15,10 +15,22 @@ log = logging.getLogger(__name__)
 
 
 class BlockService(BlockServiceInterface):
+
+    _cache: Dict[str, Tuple[List[BlockDTO], datetime]] = {}
+
     def __init__(self, engine: Engine):
         self.engine = engine
 
+    def get_cache_key(self, start_date: datetime, end_date: datetime) -> str:
+        return f"{start_date.timestamp()}-{end_date.timestamp()}"
+
     def get_blocks(self, start_date: datetime, end_date: datetime) -> list[BlockDTO]:
+        cache_key = self.get_cache_key(start_date, end_date)
+        if cache_key in self._cache:
+            blocks, timestamp = self._cache[cache_key]
+            if timestamp > datetime.now():
+                return blocks
+
         with Session(self.engine) as session:
             # Convert timezone-aware datetime to UTC timestamp
             start_ts = int(start_date.timestamp())
@@ -30,8 +42,12 @@ class BlockService(BlockServiceInterface):
                 .order_by(Block.date)
                 .all()
             )
+            self._cache[cache_key] = (
+                [block.to_dto() for block in blocks],
+                datetime.now() + timedelta(seconds=1),
+            )
 
-            return [block.to_dto() for block in blocks]
+            return self._cache[cache_key][0]
 
     def update_blocks(self, blocks: List[BlockDTO]) -> bool:
         try:
@@ -96,3 +112,5 @@ class BlockService(BlockServiceInterface):
             traceback.print_exc()
             log.error(e)
             return False
+        finally:
+            self._cache.clear()

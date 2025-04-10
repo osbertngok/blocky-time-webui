@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from typing import List
+import time
 
 import pytz
 from flask import Blueprint, jsonify, request
@@ -22,6 +23,8 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
     """
     params: start_date, end_date (YYYY-MM-DD)
     """
+    # time this function
+    starting_time = time.monotonic()
     # start_date and end_date are strs in YYYY-MM-DD format
     try:
         start_date_str: str | None = request.args.get("start_date")
@@ -49,6 +52,10 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
         )
     except Exception as e:
         return jsonify({"data": None, "error": str(e)}), 500
+    finally:
+        ending_time = time.monotonic()
+        log.info(f"get_blocks took {ending_time - starting_time} seconds")
+
 
 
 @bp.route("/api/v1/blocks", methods=["PUT"])
