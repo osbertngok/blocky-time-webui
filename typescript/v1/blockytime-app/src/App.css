@@ -68,6 +68,34 @@ main {
   padding: 20px;
 }
 
+.sidebar-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-content li {
+  margin: 10px 0;
+}
+
+.sidebar-content a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.sidebar-content a:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Add styles for active link if needed */
+.sidebar-content a.active {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
 /* Ensure the menu icon is visible */
 .MuiIconButton-root {
   color: inherit;
