@@ -29,39 +29,4 @@
 .dashboard-content {
   display: grid;
   gap: 24px;
-  width: 100%; /* Ensure content takes full width */
-  position: relative; /* Create new stacking context */
-}
-
-.time-slots-container {
-  display: grid;
-  gap: 24px;
-  grid-template-columns: 1fr 1fr;
-  width: 100%; /* Ensure container takes full width */
-  max-width: 2000px;
-  margin: 0 auto;
-  position: relative; /* Create new stacking context */
-}
-
-.time-slot-section {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  height: 600px;
-  width: 100%;
-  position: relative; /* Create new stacking context */
-  overflow: hidden; /* Contain any overflow */
-}
-
-@media (max-width: 1024px) {
-  .time-slots-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (min-width: 1024px) {
-  .dashboard-content {
-    grid-template-columns: 1fr;
-  }
 }
