@@ -26,7 +26,6 @@ export class BlockService implements BlockServiceInterface {
   }
 
   clearCache() {
-    console.log('Clearing cache');
     this.cache = {};
   }
 
@@ -53,11 +52,7 @@ export class BlockService implements BlockServiceInterface {
       const cache = this.cache[cacheKey]
       if (cache.validUntil > new Date()) {
         return cache.blocks;
-      } else {
-        console.log(`Cache entry for ${cacheKey} is expired, fetching new blocks`);
       }
-    } else {
-      console.log(`Cache entry for ${cacheKey} is not found, fetching new blocks`);
     }
 
     try {
@@ -77,7 +72,6 @@ export class BlockService implements BlockServiceInterface {
       
       const ret = result.data as BlockModel[];
       this.cache[cacheKey] = new BlockCacheEntry(ret, new Date(Date.now() + 1000));
-      console.log(`Cache entry for ${cacheKey} is set to ${ret.length} blocks`);
       return ret;
     } catch (error) {
       console.error('Error fetching blocks:', error);

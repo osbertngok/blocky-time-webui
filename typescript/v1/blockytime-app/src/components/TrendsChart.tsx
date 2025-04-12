@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,28 +35,61 @@ interface TrendsChartProps {
   groupBy: 'day' | 'month';
 }
 
+const isEqual = (a: TrendsChartProps, b: TrendsChartProps) => {
+  return a.startDate === b.startDate && a.endDate === b.endDate && a.groupBy === b.groupBy;
+}
+
 export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, groupBy }) => {
-  const [data, setData] = useState<TrendData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<TrendData[]>([]);
+  const loadingParamsRef = useRef<{ 
+    startTimestamp: number; 
+    endTimestamp: number; 
+    groupBy: string 
+  } | null>(null);
   const trendService = useTrendService();
   let daysInPeriod: number[] = [];
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const trends = await trendService.getTrends(startDate, endDate, groupBy.toUpperCase() as 'DAY' | 'MONTH');
-        setData(trends);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
+
+    const currentParams = {
+      startTimestamp: startDate.getTime(),
+      endTimestamp: endDate.getTime(),
+      groupBy
     };
 
-    fetchData();
+    const paramsMatch = loadingParamsRef.current && 
+      loadingParamsRef.current.startTimestamp === currentParams.startTimestamp &&
+      loadingParamsRef.current.endTimestamp === currentParams.endTimestamp &&
+      loadingParamsRef.current.groupBy === currentParams.groupBy;
+
+    if (!paramsMatch) {
+      
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+          loadingParamsRef.current = currentParams;
+          setError(null);
+          const trends = await trendService.getTrends(startDate, endDate, groupBy.toUpperCase() as 'DAY' | 'MONTH');
+          // Check if params still match current request
+          if (loadingParamsRef.current && 
+              loadingParamsRef.current.startTimestamp === currentParams.startTimestamp &&
+              loadingParamsRef.current.endTimestamp === currentParams.endTimestamp &&
+              loadingParamsRef.current.groupBy === currentParams.groupBy) {
+            setData(trends);
+          }
+        } catch (err) {
+          console.error('Error fetching trends:', err);
+          setError(err instanceof Error ? err.message : 'An error occurred');
+        } finally {
+          setLoading(false);
+          loadingParamsRef.current = null;
+        }
+      };
+
+      fetchData();
+    }
   }, [startDate, endDate, groupBy, trendService]);
 
   if (data.length > 0) {

@@ -10,15 +10,11 @@ export class TrendService implements TrendServiceInterface {
   }
 
   async getTrends(startDate: Date, endDate: Date, groupBy: 'DAY' | 'MONTH'): Promise<TrendData[]> {
-    try {
-      const startDateStr = format(startDate, 'yyyy-MM-dd');
-      const endDateStr = format(endDate, 'yyyy-MM-dd');
-      
-      return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'MONTH');
-    } catch (error) {
-      console.error('Error fetching trends:', error);
-      throw error;
-    }
+
+    const startDateStr = format(startDate, 'yyyy-MM-dd');
+    const endDateStr = format(endDate, 'yyyy-MM-dd');
+    
+    return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'MONTH');
   }
 
 

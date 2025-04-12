@@ -51,7 +51,6 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
         
         const startDateStr = format(startDate, 'yyyy-MM-dd');
         const endDateStr = format(endDate, 'yyyy-MM-dd');
-        console.log(`fetching stats for ${startDateStr} - ${endDateStr}`)
         
         const stats = await statsService.getStats(startDateStr, endDateStr);
         setData(stats);
