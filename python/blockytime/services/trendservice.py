@@ -114,6 +114,8 @@ class TrendService(TrendServiceInterface):
         """
         start_ts = get_local_midnight_timestamp(start_date)
         end_ts = get_local_midnight_timestamp(end_date)
+        
+        print(f"TrendService.get_trends: start_date={start_date}, end_date={end_date}, start_ts={start_ts}, end_ts={end_ts}")
 
         with Session(self._engine) as session:
             time_formatters = {
@@ -137,6 +139,9 @@ class TrendService(TrendServiceInterface):
                 end_ts,
                 time_formatters[group_by]
             )
+
+            print(f"Query returned {len(results)} rows")
+            print("First few results:", results[:5] if results else "No results")
 
             # Process results into TrendData format
             trends_by_type = {}

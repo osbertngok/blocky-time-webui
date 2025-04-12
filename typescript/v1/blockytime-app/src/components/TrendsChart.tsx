@@ -16,6 +16,7 @@ import { getColorFromDecimal } from '../utils';
 import { ChartData, Point } from 'chart.js';
 import { TrendData, TrendDataPoint } from '../interfaces/trendserviceinterface';
 import { TypeModel } from '../models/type';
+import { format } from 'date-fns';
 
 ChartJS.register(
   CategoryScale,
@@ -49,10 +50,17 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
         const start = new Date(startDate);
         const end = new Date(endDate);
         
-        // Convert groupBy to match service expectations
-        const serviceGroupBy = groupBy.toUpperCase() as 'DAY' | 'MONTH';
+        console.log('TrendsChart fetchData:', {
+          startDate,
+          endDate,
+          startFormatted: format(start, 'yyyy-MM-dd'),
+          endFormatted: format(end, 'yyyy-MM-dd'),
+          groupBy
+        });
         
-        const trends: TrendData[] = await trendService.getTrends(start, end, serviceGroupBy);
+        const serviceGroupBy = groupBy.toUpperCase() as 'DAY' | 'MONTH';
+        const trends = await trendService.getTrends(start, end, serviceGroupBy);
+        console.log('TrendsChart received data:', trends);
         setData(trends);
       } catch (err) {
         console.error('Error fetching trends:', err);

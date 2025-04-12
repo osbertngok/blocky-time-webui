@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import ArrowBack from '@mui/icons-material/ArrowBack';
@@ -34,77 +34,136 @@ interface TimeRange {
 
 export const Trends: React.FC = () => {
   const navigate = useNavigate();
-  const [viewType, setViewType] = useState<ViewType>('weekly');
-  const [selectedRange, setSelectedRange] = useState<TimeRange>(getCurrentRange('weekly'));
+  const [viewType, setViewType] = useState<ViewType>('monthly');
+  
+  // Add logging when ranges are generated
+  const timeRanges = useMemo(() => {
+    console.log('Generating time ranges for viewType:', viewType);
+    const ranges = getTimeRanges(viewType);
+    console.log('Generated ranges:', ranges.map(r => ({
+      label: r.label,
+      start: format(r.start, 'yyyy-MM-dd'),
+      end: format(r.end, 'yyyy-MM-dd')
+    })));
+    return ranges;
+  }, [viewType]);
+
+  // Add logging when current range is selected
+  const [selectedRange, setSelectedRange] = useState(() => {
+    const current = getCurrentRange(viewType);
+    console.log('Initial selected range:', {
+      label: current.label,
+      start: format(current.start, 'yyyy-MM-dd'),
+      end: format(current.end, 'yyyy-MM-dd')
+    });
+    return current;
+  });
+
+  // Add logging for range changes
+  useEffect(() => {
+    console.log('Selected range changed:', {
+      label: selectedRange.label,
+      start: format(selectedRange.start, 'yyyy-MM-dd'),
+      end: format(selectedRange.end, 'yyyy-MM-dd')
+    });
+  }, [selectedRange]);
 
   function getCurrentRange(type: ViewType): TimeRange {
     const now = new Date();
-    switch (type) {
-      case 'weekly':
-        return {
-          start: startOfWeek(now, { weekStartsOn: 1 }),
-          end: endOfWeek(now, { weekStartsOn: 1 }),
-          label: format(now, "'Week of' MMM d, yyyy")
-        };
-      case 'monthly':
-        return {
-          start: startOfMonth(now),
-          end: endOfMonth(now),
-          label: format(now, 'MMMM yyyy')
-        };
-      case 'yearly':
-        return {
-          start: startOfYear(now),
-          end: endOfYear(now),
-          label: format(now, 'yyyy')
-        };
-    }
-  }
-
-  const getTimeRanges = useCallback((type: ViewType): TimeRange[] => {
-    const ranges: TimeRange[] = [];
-    const now = new Date();
-    let current: Date;
+    console.log('getCurrentRange input:', { type, now });
+    let result: TimeRange;
     
     switch (type) {
       case 'weekly':
-        for (let i = -26; i <= 26; i++) {
-          current = i < 0 ? subWeeks(now, Math.abs(i)) : addWeeks(now, i);
-          ranges.push({
-            start: startOfWeek(current, { weekStartsOn: 1 }),
-            end: endOfWeek(current, { weekStartsOn: 1 }),
-            label: format(current, "'Week of' MMM d, yyyy")
-          });
-        }
+        const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+        result = {
+          start: weekStart,
+          end: startOfWeek(addWeeks(weekStart, 1), { weekStartsOn: 1 }),
+          label: format(now, "'Week of' MMM d, yyyy")
+        };
         break;
       case 'monthly':
-        for (let i = -12; i <= 12; i++) {
-          current = i < 0 ? subMonths(now, Math.abs(i)) : addMonths(now, i);
-          ranges.push({
-            start: startOfMonth(current),
-            end: endOfMonth(current),
-            label: format(current, 'MMMM yyyy')
-          });
-        }
+        const monthStart = startOfMonth(now);
+        result = {
+          start: monthStart,
+          end: startOfMonth(addMonths(monthStart, 1)),
+          label: format(now, 'MMMM yyyy')
+        };
         break;
       case 'yearly':
-        for (let i = -5; i <= 5; i++) {
-          current = i < 0 ? subYears(now, Math.abs(i)) : addYears(now, i);
-          ranges.push({
-            start: startOfYear(current),
-            end: endOfYear(current),
-            label: format(current, 'yyyy')
-          });
-        }
+        const yearStart = startOfYear(now);
+        result = {
+          start: yearStart,
+          end: startOfYear(addYears(yearStart, 1)),
+          label: format(now, 'yyyy')
+        };
         break;
     }
-    return ranges;
-  }, []);
+    console.log('getCurrentRange output:', { 
+      result,
+      startFormatted: format(result.start, 'yyyy-MM-dd'),
+      endFormatted: format(result.end, 'yyyy-MM-dd')
+    });
+    return result;
+  }
 
-  const handleViewChange = (_: React.SyntheticEvent, newValue: ViewType) => {
+  function getTimeRanges(type: ViewType): TimeRange[] {
+    const now = new Date();
+    console.log('getTimeRanges input:', { type, now });
+    
+    const ranges: TimeRange[] = [];
+    for (let i = -6; i <= 6; i++) {
+      let date = now;
+      let start: Date;
+      let end: Date;
+      let label: string;
+
+      switch (type) {
+        case 'weekly':
+          date = addWeeks(now, i);
+          start = startOfWeek(date, { weekStartsOn: 1 });  // Start on Monday
+          end = endOfWeek(date, { weekStartsOn: 1 });  // End on Sunday
+          label = format(date, "'Week of' MMM d, yyyy");
+          break;
+        case 'monthly':
+          date = addMonths(now, i);
+          start = startOfMonth(date);
+          // For end date, we should use start of next month instead of end of current month
+          end = startOfMonth(addMonths(date, 1));
+          label = format(date, 'MMMM yyyy');
+          break;
+        case 'yearly':
+          date = addYears(now, i);
+          start = startOfYear(date);
+          // Similarly, use start of next year instead of end of current year
+          end = startOfYear(addYears(date, 1));
+          label = format(date, 'yyyy');
+          break;
+      }
+      
+      console.log(`Range ${i}:`, {
+        date: format(date, 'yyyy-MM-dd'),
+        start: format(start, 'yyyy-MM-dd'),
+        end: format(end, 'yyyy-MM-dd'),
+        label
+      });
+
+      ranges.push({ start, end, label });
+    }
+    return ranges;
+  }
+
+  const handleViewChange = useCallback((event: React.SyntheticEvent, newValue: ViewType) => {
+    console.log('View type changing from', viewType, 'to', newValue);
     setViewType(newValue);
-    setSelectedRange(getCurrentRange(newValue));
-  };
+    const newRange = getCurrentRange(newValue);
+    console.log('New range after view change:', {
+      label: newRange.label,
+      start: format(newRange.start, 'yyyy-MM-dd'),
+      end: format(newRange.end, 'yyyy-MM-dd')
+    });
+    setSelectedRange(newRange);
+  }, [viewType]);
 
   return (
     <div className="trends-page">
