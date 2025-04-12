@@ -11,7 +11,7 @@ from ..dtos.type_dto import TypeDTO
 from ..interfaces.trendserviceinterface import TrendGroupBy, TrendServiceInterface
 from ..models.block import Block
 from ..models.type_ import Type
-
+from ..utils import timeit
 # Server timezone configuration
 SERVER_TZ = ZoneInfo("Asia/Hong_Kong")
 SERVER_TZ_OFFSET = 8 * 3600  # 8 hours in seconds
@@ -23,7 +23,7 @@ def get_local_midnight_timestamp(d: date, tz: ZoneInfo = SERVER_TZ) -> int:
     """
     return int(datetime.combine(d, datetime.min.time()).replace(tzinfo=tz).timestamp())
 
-
+@timeit
 def get_trend_data(
     session: Session,
     start_ts: int,
@@ -69,30 +69,46 @@ def get_trend_data(
         .subquery()
     )
 
+    # As for Blocks, let's group them by type and date.
+    blocks = (
+        session.query(
+            Block.type_uid.label("type_uid"),
+            func.strftime(
+                    time_format_str,
+                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                ).label("time_label"),
+            func.coalesce((func.count(Block.uid) * 0.25), literal(0.0)).label(
+                "duration"
+            ),
+        )
+        .group_by(Block.type_uid, func.strftime(
+                    time_format_str,
+                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                ))
+        .order_by(func.strftime(
+                    time_format_str,
+                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+        ))
+        .subquery()
+    )
     # Finally, left join with actual block counts
     results = (
         session.query(
             base.c.uid.label("type_uid"),
             base.c.time.label("time_label"),
-            func.coalesce((func.count(Block.uid) * 0.25), literal(0.0)).label(
+            func.coalesce((func.sum(blocks.c.duration)), literal(0.0)).label(
                 "duration"
             ),
         )
         .outerjoin(
-            Block,
+            blocks,
             and_(
-                Block.type_uid == base.c.uid,
-                func.strftime(
-                    time_format_str,
-                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch"),
-                )
-                == base.c.time,
-                Block.date >= start_ts,
-                Block.date < end_ts,
-            ),
+                blocks.c.type_uid == base.c.uid,
+                blocks.c.time_label == base.c.time
+            )
         )
         .group_by(base.c.uid, base.c.time)
-        .order_by(base.c.time)
+        .order_by(base.c.uid, base.c.time)
         .all()
     )
 
