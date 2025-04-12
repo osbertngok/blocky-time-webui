@@ -63,10 +63,6 @@ def get_trend_data(
         session.query(
             date_series.c.time,
             types.c.uid,
-            types.c.name,
-            types.c.color,
-            types.c.hidden,
-            types.c.priority,
         )
         .select_from(date_series)
         .join(types, literal(1) == literal(1))
@@ -77,10 +73,6 @@ def get_trend_data(
     results = (
         session.query(
             base.c.uid.label("type_uid"),
-            base.c.name.label("type_name"),
-            base.c.color.label("type_color"),
-            base.c.hidden.label("type_hidden"),
-            base.c.priority.label("type_priority"),
             base.c.time.label("time_label"),
             func.coalesce((func.count(Block.uid) * 0.25), literal(0.0)).label(
                 "duration"
@@ -100,7 +92,7 @@ def get_trend_data(
             ),
         )
         .group_by(base.c.uid, base.c.time)
-        .order_by(base.c.time, base.c.priority.desc())
+        .order_by(base.c.time)
         .all()
     )
 
@@ -140,18 +132,13 @@ class TrendService(TrendServiceInterface):
 
             # Process results into TrendData format
             trends_by_type: Dict[int, List[TrendDataPoint]] = {}
-            type_dict = {}
+            type_dict: Dict[int, TypeDTO] = {
+                t.uid: TypeDTO(uid=t.uid, name=t.name, color=t.color, hidden=t.hidden, priority=t.priority, projects=[])
+                for t in session.query(Type.uid, Type.name, Type.color, Type.hidden, Type.priority).all()
+            } # Just to ensure no projects is loaded. We dont' need that here.
             for r in results:
                 if r.type_uid not in trends_by_type:
                     trends_by_type[r.type_uid] = []
-                    type_dict[r.type_uid] = TypeDTO(
-                        uid=r.type_uid,
-                        name=r.type_name,
-                        color=r.type_color,
-                        hidden=r.type_hidden,
-                        priority=r.type_priority,
-                        projects=[],
-                    )
 
                 trends_by_type[r.type_uid].append(
                     TrendDataPoint(time_label=r.time_label, duration=r.duration)
