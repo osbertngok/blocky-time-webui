@@ -16,7 +16,7 @@ import { getColorFromDecimal } from '../utils';
 import { ChartData, Point } from 'chart.js';
 import { TrendData, TrendDataPoint } from '../interfaces/trendserviceinterface';
 import { TypeModel } from '../models/type';
-import { format } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 
 ChartJS.register(
   CategoryScale,
@@ -73,6 +73,24 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
     fetchData();
   }, [startDate, endDate, groupBy, trendService]);
 
+  // We want to present the average daily duration. So when if groupBy is MONTH, we need to calculate the average duration for each day in the month.
+  // Therefore we would need to calculate number of days in the time period for each label.
+  let daysInPeriod: number[] = [];
+  if (data.length > 0) {
+    if (groupBy.toUpperCase() === 'DAY') {
+      daysInPeriod = data[0].items.map(_ => 1);
+    } else if (groupBy.toUpperCase() === 'MONTH') {
+      daysInPeriod = data[0].items.map(item => {
+        const start = new Date(item.timeLabel);
+        const end = new Date(item.timeLabel);
+        end.setMonth(start.getMonth() + 1);
+        return differenceInDays(end, start);
+      });
+    }
+    
+  }
+
+
 
   const chartData: ChartData<"line", (number | Point | null)[], string> = {
     labels: data.length > 0 ? data[0].items.map(item => item.timeLabel) : [],
@@ -80,7 +98,9 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
       const type: TypeModel = trenData.type;
       return {
         label: type.name,
-        data: trenData.items.map((item: TrendDataPoint) => item.duration),
+        data: trenData.items.map((item: TrendDataPoint, index: number) => 
+          parseFloat((item.duration / daysInPeriod[index]).toFixed(1))
+        ),
         borderColor: getColorFromDecimal(type.color),
         backgroundColor: getColorFromDecimal(type.color),
         fill: true,
