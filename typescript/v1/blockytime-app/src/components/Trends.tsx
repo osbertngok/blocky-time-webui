@@ -2,10 +2,10 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import ArrowBack from '@mui/icons-material/ArrowBack';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
 import {
   startOfWeek,
   endOfWeek,
@@ -19,8 +19,9 @@ import {
   subWeeks,
   subMonths,
   subYears,
-  format,
+  format
 } from 'date-fns';
+import './Trends.css';
 import { TrendsChart } from './TrendsChart';
 
 type ViewType = 'weekly' | 'monthly' | 'yearly';
@@ -127,25 +128,30 @@ export const Trends: React.FC = () => {
           <Tab value="yearly" label="Yearly View" />
         </Tabs>
 
-        <div className="time-range-selector">
-          <Select
-            value={selectedRange.label}
-            onChange={(event) => {
-              const newRange = getTimeRanges(viewType).find(
-                range => range.label === event.target.value
-              );
-              if (newRange) {
-                setSelectedRange(newRange);
+        <div className="date-range-selector">
+          <IconButton 
+            onClick={() => {
+              const ranges = getTimeRanges(viewType);
+              const currentIndex = ranges.findIndex(r => r.label === selectedRange.label);
+              if (currentIndex > 0) {
+                setSelectedRange(ranges[currentIndex - 1]);
               }
             }}
-            fullWidth
           >
-            {getTimeRanges(viewType).map((range) => (
-              <MenuItem key={range.label} value={range.label}>
-                {range.label}
-              </MenuItem>
-            ))}
-          </Select>
+            <ChevronLeft />
+          </IconButton>
+          <span className="date-range">{selectedRange.label}</span>
+          <IconButton 
+            onClick={() => {
+              const ranges = getTimeRanges(viewType);
+              const currentIndex = ranges.findIndex(r => r.label === selectedRange.label);
+              if (currentIndex < ranges.length - 1) {
+                setSelectedRange(ranges[currentIndex + 1]);
+              }
+            }}
+          >
+            <ChevronRight />
+          </IconButton>
         </div>
 
         <div className="chart-container">

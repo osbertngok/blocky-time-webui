@@ -95,6 +95,7 @@ class TestSleepService:
             linewidth=2,
             label=f"{window_size}-Day Moving Average (End)",
         )
+        ax1.set_ylim(22, 38)
 
         # Create second y-axis for duration
         ax2 = ax1.twinx()
@@ -106,7 +107,7 @@ class TestSleepService:
             linewidth=2,
             label=f"{window_size}-Day Moving Average (Duration)",
         )
-        ax2.set_ylim(0, 16)  # Set y-axis limits for duration from 0 to 16 hours
+        ax2.set_ylim(-2, 14)  # Set y-axis limits for duration from 0 to 16 hours
 
         # Convert days since 1970 to months for x-axis labels
         base_date = datetime(1970, 1, 1)

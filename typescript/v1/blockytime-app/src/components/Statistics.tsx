@@ -11,6 +11,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { format, addDays, subDays, startOfWeek, endOfWeek, 
          startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { StatsChart } from './StatsChart';
+import './Statistics.css';
 
 type ChartType = 'pie' | 'bar';
 type StatisticsType = 
