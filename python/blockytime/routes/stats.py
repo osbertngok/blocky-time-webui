@@ -44,8 +44,13 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
+        type_uids = request.args.getlist('type_uid', type=int)
+        time_slot_minutes = request.args.get('time_slot_minutes', type=int, default=30)
+        hour = request.args.get('hour', type=int, default=None)
+        minute = request.args.get('minute', type=int, default=None)
+
         stats: List[StatisticsDTO] = statistics_service.get_statistics(
-            start_date, end_date
+            start_date, end_date, type_uids if type_uids else None, time_slot_minutes, hour, minute
         )
         ret = {"data": [stat.to_dict() for stat in stats], "error": None}
         gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()
