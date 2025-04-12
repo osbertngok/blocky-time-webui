@@ -10,6 +10,7 @@ import Drawer from '@mui/material/Drawer';
 import { ServiceProvider } from './contexts/ServiceContext';
 import './App.css';
 import { Link, BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Dashboard } from './components/Dashboard';
 
 function App() {
   const mainUIRef = useRef<{ scrollToCurrentTime: () => void }>(null);
@@ -61,6 +62,9 @@ function App() {
                   <li>
                     <Link to="/trends">Trends</Link>
                   </li>
+                  <li>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </li>
                 </ul>
               </div>
             </Drawer>
@@ -69,6 +73,7 @@ function App() {
                 <Route path="/" element={<MainUI ref={mainUIRef} />} />
                 <Route path="/statistics" element={<Statistics />} />
                 <Route path="/trends" element={<Trends />} />
+                <Route path="/dashboard" element={<Dashboard />} />
               </Routes>
             </main>
           </div>

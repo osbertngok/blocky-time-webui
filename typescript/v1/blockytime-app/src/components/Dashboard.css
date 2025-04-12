@@ -1,0 +1,38 @@
+.dashboard-page {
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  margin-bottom: 24px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.top-row h2 {
+  margin: 0;
+  flex-grow: 1;
+  color: #333;
+}
+
+.dashboard-content {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-content {
+    grid-template-columns: 300px 1fr;
+  }
+}

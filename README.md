@@ -24,8 +24,8 @@ See the `Makefile` for more details.
 
 1. Editing Types;
 2. Editing Projects;
-3. View in 30 minute blocks;
-4. Statistics;
+3. (Done) View in 30 minute blocks;
+4. (Done) Statistics;
 5. Auto convert from other time loggers, like Remember the Milk or 3x3;
 
 
