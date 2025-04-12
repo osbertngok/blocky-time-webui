@@ -8,7 +8,7 @@ import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import { format, addDays, subDays, startOfWeek, endOfWeek, 
+import { format, addDays, subDays, startOfWeek,
          startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { StatsChart } from './StatsChart';
 import './Statistics.css';
@@ -41,26 +41,29 @@ export const Statistics: React.FC = () => {
   const getDateRange = useCallback((): { start: Date; end: Date; canNavigate: boolean } => {
     const today = new Date();
     switch (state.statisticsType) {
-      case 'today':
+      case 'today': {
         return {
           start: state.selectedDate,
           end: addDays(state.selectedDate, 1),
           canNavigate: true
         };
-      case 'this-week':
+      }
+      case 'this-week': {
         const weekStart = startOfWeek(state.selectedDate, { weekStartsOn: 1 });
         return {
           start: weekStart,
           end: addDays(weekStart, 7),
           canNavigate: true
         };
-      case 'this-month':
+      }
+      case 'this-month': {
         return {
           start: startOfMonth(state.selectedDate),
           end: endOfMonth(state.selectedDate),
           canNavigate: true
         };
-      case 'this-season':
+      }
+      case 'this-season': {
         const month = state.selectedDate.getMonth();
         const seasonStart = new Date(state.selectedDate.getFullYear(), Math.floor(month / 3) * 3, 1);
         const seasonEnd = new Date(seasonStart.getFullYear(), seasonStart.getMonth() + 3, 0);
@@ -69,52 +72,65 @@ export const Statistics: React.FC = () => {
           end: seasonEnd,
           canNavigate: true
         };
-      case 'this-year':
+      }
+      case 'this-year': {
         return {
           start: startOfYear(state.selectedDate),
           end: endOfYear(state.selectedDate),
           canNavigate: true
         };
-      case 'last-7-days':
+      }
+      case 'last-7-days': {
         return {
           start: subDays(today, 7),
           end: today,
           canNavigate: false
         };
-      case 'last-30-days':
+      }
+      case 'last-30-days': {
         return {
           start: subDays(today, 30),
           end: today,
           canNavigate: false
         };
-      case 'since-inception':
+      }
+      case 'since-inception': {
         return {
           start: new Date(2000, 1, 1), // Adjust this to your actual inception date
           end: today,
           canNavigate: false
         };
+      }
     }
   }, [state.statisticsType, state.selectedDate]);
 
   const formatDateRange = useCallback((): string => {
     const { start, end } = getDateRange();
     switch (state.statisticsType) {
-      case 'today':
+      case 'today': {
         return format(state.selectedDate, 'MMMM d, yyyy');
-      case 'this-week':
+      }
+      case 'this-week': {
         return `${format(start, 'MMM d')} - ${format(end, 'MMM d, yyyy')}`;
-      case 'this-month':
+      }
+      case 'this-month': {
         return format(state.selectedDate, 'MMMM yyyy');
-      case 'this-season':
+      }
+      case 'this-season': {
         return `${format(start, 'MMM')} - ${format(end, 'MMM yyyy')}`;
-      case 'this-year':
+      }
+      case 'this-year': {
         return format(state.selectedDate, 'yyyy');
-      case 'last-7-days':
+      }
+      case 'last-7-days': {
         return 'Last 7 Days';
-      case 'last-30-days':
+      }
+      case 'last-30-days': {
         return 'Last 30 Days';
-      case 'since-inception':
+      }
+      case 'since-inception': {
         return 'All Time';
+      }
     }
   }, [state.statisticsType, state.selectedDate, getDateRange]);
 
@@ -123,21 +139,26 @@ export const Statistics: React.FC = () => {
     setState(prev => {
       const newDate = new Date(prev.selectedDate);
       switch (prev.statisticsType) {
-        case 'today':
+        case 'today': {
           newDate.setDate(newDate.getDate() + amount);
           break;
-        case 'this-week':
+        }
+        case 'this-week': {
           newDate.setDate(newDate.getDate() + (7 * amount));
           break;
-        case 'this-month':
+        }
+        case 'this-month': {
           newDate.setMonth(newDate.getMonth() + amount);
           break;
-        case 'this-season':
+        }
+        case 'this-season': {
           newDate.setMonth(newDate.getMonth() + (3 * amount));
           break;
-        case 'this-year':
+        }
+        case 'this-year': {
           newDate.setFullYear(newDate.getFullYear() + amount);
           break;
+        }
       }
       return { ...prev, selectedDate: newDate };
     });

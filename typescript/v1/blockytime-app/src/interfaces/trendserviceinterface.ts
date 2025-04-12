@@ -1,5 +1,4 @@
 import { TypeModel } from '../models/type';
-import { TrendItemModel } from '../models/trenditem';
 
 export interface TrendDataPoint {
   duration: number; 

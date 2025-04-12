@@ -11,12 +11,11 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import { useTrendService } from '../contexts/ServiceHooks';
-import { TrendItemModel } from '../models/trenditem';
 import { getColorFromDecimal } from '../utils';
 import { ChartData, Point } from 'chart.js';
 import { TrendData, TrendDataPoint } from '../interfaces/trendserviceinterface';
 import { TypeModel } from '../models/type';
-import { differenceInDays, format } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 
 ChartJS.register(
   CategoryScale,

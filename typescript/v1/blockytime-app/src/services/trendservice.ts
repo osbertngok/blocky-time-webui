@@ -1,5 +1,4 @@
-import { TrendItemModel } from '../models/trenditem';
-import { TrendServiceInterface } from '../interfaces/trendserviceinterface';
+import { TrendServiceInterface, TrendData } from '../interfaces/trendserviceinterface';
 import { format } from 'date-fns';
 
 
@@ -10,19 +9,19 @@ export class TrendService implements TrendServiceInterface {
     this.apiBaseUrl = apiBaseUrl;
   }
 
-  async getTrends(startDate: Date, endDate: Date, groupBy: 'DAY' | 'WEEK' | 'MONTH'): Promise<TrendItemModel[]> {
+  async getTrends(startDate: Date, endDate: Date, groupBy: 'DAY' | 'MONTH'): Promise<TrendData[]> {
     try {
       const startDateStr = format(startDate, 'yyyy-MM-dd');
       const endDateStr = format(endDate, 'yyyy-MM-dd');
       
-      return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'WEEK' | 'MONTH');
+      return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'MONTH');
     } catch (error) {
       throw error;
     }
   }
 
 
-  async getTrendsByDateString(startDateStr: string, endDateStr: string, groupBy: 'DAY' | 'WEEK' | 'MONTH'): Promise<TrendItemModel[]> {
+  async getTrendsByDateString(startDateStr: string, endDateStr: string, groupBy: 'DAY' | 'MONTH'): Promise<TrendData[]> {
     try {
       const response = await fetch(
         `${this.apiBaseUrl}/trends?start_date=${startDateStr}&end_date=${endDateStr}&group_by=${groupBy}`
@@ -38,7 +37,7 @@ export class TrendService implements TrendServiceInterface {
         throw new Error(result.error);
       }
       
-      let ret = result.data as TrendItemModel[];
+      let ret = result.data as TrendData[];
       return ret;
     } catch (error) {
       console.error('Error fetching blocks:', error);

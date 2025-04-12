@@ -8,12 +8,16 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  TooltipItem,
+  ChartData as ChartJSData,
+  ChartOptions,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Pie, Bar } from 'react-chartjs-2';
 import { useStatsService } from '../contexts/ServiceHooks';
 import { StatsData } from "../interfaces/statisticsserviceinterface";
 import { getColorFromDecimal } from '../utils';
+import { Context } from 'chartjs-plugin-datalabels';
 
 ChartJS.register(
   ArcElement,
@@ -25,10 +29,12 @@ ChartJS.register(
   ChartDataLabels
 );
 
+type ChartType = 'pie' | 'bar';
+
 interface StatsChartProps {
   startDate: Date;
   endDate: Date;
-  chartType: 'pie' | 'bar';
+  chartType: ChartType;
 }
 
 export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, chartType }) => {
@@ -67,7 +73,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
   // Convert seconds to hours and divide by number of days
   const getDailyHours = (duration: number) => duration / daysDiff;
 
-  const chartData = {
+  const chartData: ChartJSData<ChartType, number[], string> = {
     labels: data.map(item => item.type.name || 'Unknown'),
     datasets: [
       {
@@ -80,7 +86,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
     ],
   };
 
-  const pieOptions = {
+  const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -88,24 +94,15 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
         position: 'right' as const,
         display: true,
       },
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            const value = context.raw * daysDiff; // Convert back to total hours
-            const percentage = ((context.raw * daysDiff) / totalDuration * 100).toFixed(1);
-            return `${context.label}: ${value.toFixed(1)} total hours (${context.raw.toFixed(1)} hrs/day, ${percentage}%)`;
-          },
-        },
-      },
       datalabels: {
         color: '#fff',
         font: {
           weight: 'bold' as const,
           size: 12
         },
-        formatter: (value: number, context: any) => {
+        formatter: (value: number, context: Context) => {
           const percentage = (value * daysDiff / totalDuration * 100).toFixed(1);
-          const label = context.chart.data.labels[context.dataIndex];
+          const label = context.chart.data.labels?.[context.dataIndex];
           return `${label}\n${percentage}%\n(${value.toFixed(1)} hrs/day)`;
         },
         textAlign: 'center' as const,
@@ -113,42 +110,33 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
     },
   };
 
-  const barOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+  const pieOptions: ChartOptions<'pie'> = {
+    ...commonOptions,
     plugins: {
-      legend: {
-        display: false,
-      },
+      ...commonOptions.plugins,
       tooltip: {
         callbacks: {
-          label: (context: any) => {
-            const value = context.raw * daysDiff; // Convert back to total hours
-            const percentage = ((context.raw * daysDiff) / totalDuration * 100).toFixed(1);
-            return `${context.raw.toFixed(1)} hrs/day (${value.toFixed(1)} total, ${percentage}%)`;
+          label: (context: TooltipItem<'pie'>) => {
+            const value = context.raw as number * daysDiff;
+            const percentage = ((context.raw as number * daysDiff) / totalDuration * 100).toFixed(1);
+            return `${context.label}: ${value.toFixed(1)} total hours (${(context.raw as number).toFixed(1)} hrs/day, ${percentage}%)`;
           },
         },
       },
-      datalabels: {
-        color: '#fff',
-        font: {
-          weight: 'bold' as const,
-          size: 12
-        },
-        formatter: (value: number, context: any) => {
-          const percentage = (value * daysDiff / totalDuration * 100).toFixed(1);
-          const label = context.chart.data.labels[context.dataIndex];
-          return `${label}\n${percentage}%\n(${value.toFixed(1)} hrs/day)`;
-        },
-        textAlign: 'center' as const,
-      },
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: 'Average Hours per Day',
+  };
+
+  const barOptions: ChartOptions<'bar'> = {
+    ...commonOptions,
+    plugins: {
+      ...commonOptions.plugins,
+      tooltip: {
+        callbacks: {
+          label: (context: TooltipItem<'bar'>) => {
+            const value = context.raw as number * daysDiff;
+            const percentage = ((context.raw as number * daysDiff) / totalDuration * 100).toFixed(1);
+            return `${context.label}: ${value.toFixed(1)} total hours (${(context.raw as number).toFixed(1)} hrs/day, ${percentage}%)`;
+          },
         },
       },
     },
@@ -171,11 +159,13 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
   return (
     <div className="stats-chart" style={{ height: '400px' }}>
       {chartType === 'pie' ? (
-        <Pie data={chartData} options={options} />
+        <Pie data={chartData as ChartJSData<'pie', number[], string>} options={options as ChartOptions<'pie'>} />
       ) : (
-        <Bar data={chartData} options={options} />
+        <Bar data={chartData as ChartJSData<'bar', number[], string>} options={options as ChartOptions<'bar'>} />
       )}
     </div>
   );
 };
+
+export default StatsChart;
 

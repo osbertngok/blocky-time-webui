@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import ArrowBack from '@mui/icons-material/ArrowBack';
@@ -10,15 +10,10 @@ import {
   startOfWeek,
   endOfWeek,
   startOfMonth,
-  endOfMonth,
   startOfYear,
-  endOfYear,
   addWeeks,
   addMonths,
   addYears,
-  subWeeks,
-  subMonths,
-  subYears,
   format,
   parse
 } from 'date-fns';
@@ -68,13 +63,9 @@ export const Trends: React.FC = () => {
     setSearchParams(newParams, { replace: true });
   }, [viewType, selectedRange, setSearchParams]);
 
-  const handleViewChange = useCallback((event: React.SyntheticEvent, newValue: ViewType) => {
+  const handleViewChange = useCallback((_event: React.SyntheticEvent, newValue: ViewType) => {
     setViewType(newValue);
     setSelectedRange(getCurrentRange(newValue));
-  }, [viewType]);
-
-  const timeRanges = useMemo(() => {
-    return getTimeRanges(viewType);
   }, [viewType]);
 
   // Navigation handlers
