@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import List, Optional, Dict
 
-from sqlalchemy import func, and_, literal
+from sqlalchemy import func, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
@@ -69,6 +69,8 @@ class StatisticsService(StatisticsServiceInterface):
             # Group by type
             query = query.group_by(Block.type_uid)
 
+            # Order by duration
+            query = query.order_by(text("count DESC"))
             # Get types
             type_dict: Dict[int, TypeDTO] = {
                 t.uid: TypeDTO(uid=t.uid, name=t.name, color=t.color, hidden=t.hidden, priority=t.priority)
