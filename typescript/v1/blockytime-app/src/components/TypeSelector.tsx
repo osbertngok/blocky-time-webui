@@ -122,7 +122,6 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
                           borderRadius: '4px',
                           margin: '2px 8px',
                           '&:hover': {
-                            // Remove hover effect
                             backgroundColor: colorStyle.backgroundColor || 'inherit',
                             opacity: 1
                           },
@@ -134,13 +133,28 @@ export const TypeSelector: React.FC<TypeSelectorProps> = ({ onTypeSelect }) => {
                         disableRipple
                       >
                         <Box 
-                          width={24}
+                          width="20%"
+                          maxWidth={60}
+                          minWidth={40}
                           display="flex"
                           alignItems="center"
-                          justifyContent="center"
                           mr={1}
-                          onClick={(e) => hasProjects && isValidTypeUid(type.uid) && handleToggleExpand(type.uid, e)}
-                          sx={{ cursor: hasProjects ? 'pointer' : 'default' }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (hasProjects && isValidTypeUid(type.uid)) {
+                              handleToggleExpand(type.uid, e);
+                            }
+                          }}
+                          sx={{ 
+                            cursor: hasProjects ? 'pointer' : 'default',
+                            height: '100%',
+                            padding: '4px',
+                            borderRadius: '4px',
+                            transition: 'background-color 0.2s',
+                            '&:hover': hasProjects ? {
+                              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                            } : {}
+                          }}
                         >
                           {hasProjects && (isExpanded ? <ExpandLess /> : <ExpandMore />)}
                         </Box>
