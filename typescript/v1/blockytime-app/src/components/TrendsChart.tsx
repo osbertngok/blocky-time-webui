@@ -7,14 +7,15 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartData
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useTrendService } from '../contexts/ServiceHooks';
-import { getColorFromDecimal } from '../utils';
-import { ChartData, Point } from 'chart.js';
 import { TrendData, TrendDataPoint } from '../interfaces/trendserviceinterface';
 import { TypeModel } from '../models/type';
+import { getColorFromDecimal } from '../utils';
 import { differenceInDays } from 'date-fns';
 
 ChartJS.register(
@@ -24,7 +25,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 interface TrendsChartProps {
@@ -35,9 +37,10 @@ interface TrendsChartProps {
 
 export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, groupBy }) => {
   const [data, setData] = useState<TrendData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const trendService = useTrendService();
+  let daysInPeriod: number[] = [];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,10 +59,8 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
     fetchData();
   }, [startDate, endDate, groupBy, trendService]);
 
-  // We want to present the average daily duration. So when if groupBy is MONTH, we need to calculate the average duration for each day in the month.
-  // Therefore we would need to calculate number of days in the time period for each label.
-  let daysInPeriod: number[] = [];
   if (data.length > 0) {
+    // Calculate days in each period based on time labels
     if (groupBy.toUpperCase() === 'DAY') {
       daysInPeriod = data[0].items.map(_ => 1);
     } else if (groupBy.toUpperCase() === 'MONTH') {
@@ -70,18 +71,15 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
         return differenceInDays(end, start);
       });
     }
-    
   }
 
-
-
-  const chartData: ChartData<"line", (number | Point | null)[], string> = {
+  const chartData: ChartData<'line'> = {
     labels: data.length > 0 ? data[0].items.map(item => item.timeLabel) : [],
-    datasets: data.map((trenData: TrendData) => {
-      const type: TypeModel = trenData.type;
+    datasets: data.map((trendData: TrendData) => {
+      const type: TypeModel = trendData.type;
       return {
         label: type.name,
-        data: trenData.items.map((item: TrendDataPoint, index: number) => 
+        data: trendData.items.map((item: TrendDataPoint, index: number) => 
           parseFloat((item.duration / daysInPeriod[index]).toFixed(1))
         ),
         borderColor: getColorFromDecimal(type.color),
@@ -93,28 +91,23 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'right' as const,
       },
-      tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            return `${context.dataset.label}: ${context.raw.toFixed(1)} hours`;
-          },
-        },
-      },
+      datalabels: {
+        display: false
+      }
     },
     scales: {
       y: {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Hours',
-        },
-      },
-    },
+          text: 'Hours per Day'
+        }
+      }
+    }
   };
 
   if (loading) {

@@ -16,6 +16,7 @@ export class TrendService implements TrendServiceInterface {
       
       return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'MONTH');
     } catch (error) {
+      console.error('Error fetching trends:', error);
       throw error;
     }
   }
@@ -37,10 +38,9 @@ export class TrendService implements TrendServiceInterface {
         throw new Error(result.error);
       }
       
-      let ret = result.data as TrendData[];
-      return ret;
+      return result.data as TrendData[];
     } catch (error) {
-      console.error('Error fetching blocks:', error);
+      console.error('Error fetching trends:', error);
       throw error;
     }
   }

@@ -61,12 +61,13 @@ export const Trends: React.FC = () => {
     newParams.set('start', format(selectedRange.start, 'yyyy-MM-dd'));
     newParams.set('end', format(selectedRange.end, 'yyyy-MM-dd'));
     setSearchParams(newParams, { replace: true });
-  }, [viewType, selectedRange, setSearchParams]);
+  }, [viewType, selectedRange, setSearchParams, searchParams]);
 
   const handleViewChange = useCallback((_event: React.SyntheticEvent, newValue: ViewType) => {
     setViewType(newValue);
-    setSelectedRange(getCurrentRange(newValue));
-  }, [viewType]);
+    const newRange = getCurrentRange(newValue);
+    setSelectedRange(newRange);
+  }, []);
 
   // Navigation handlers
   const handlePrevious = useCallback(() => {

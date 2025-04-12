@@ -61,6 +61,7 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
         return response, 200
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
@@ -147,6 +148,7 @@ def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             return jsonify({"error": "expecting list of blocks"}), 400
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -157,5 +159,6 @@ def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             return jsonify({"error": "Failed to update blocks"}), 500
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

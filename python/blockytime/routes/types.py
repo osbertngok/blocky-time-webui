@@ -24,5 +24,6 @@ def get_types(type_service: TypeServiceInterface) -> RouteReturn:
         )
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         return jsonify({"data": None, "error": str(e)}), 500

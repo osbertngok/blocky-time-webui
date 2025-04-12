@@ -48,9 +48,9 @@ export class BlockService implements BlockServiceInterface {
 
   async getBlocksByDateString(startDateStr: string, endDateStr: string): Promise<BlockModel[]> {
     // if cache entry is valid, return it
-    let cacheKey = this.getCacheKey(startDateStr, endDateStr);
+    const cacheKey = this.getCacheKey(startDateStr, endDateStr);
     if (this.cache[cacheKey]) {
-      let cache = this.cache[cacheKey]
+      const cache = this.cache[cacheKey]
       if (cache.validUntil > new Date()) {
         return cache.blocks;
       } else {
@@ -75,7 +75,7 @@ export class BlockService implements BlockServiceInterface {
         throw new Error(result.error);
       }
       
-      let ret = result.data as BlockModel[];
+      const ret = result.data as BlockModel[];
       this.cache[cacheKey] = new BlockCacheEntry(ret, new Date(Date.now() + 1000));
       console.log(`Cache entry for ${cacheKey} is set to ${ret.length} blocks`);
       return ret;
