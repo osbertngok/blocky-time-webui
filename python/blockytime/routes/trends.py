@@ -3,13 +3,12 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import List, Tuple
+from typing import List
 
 import pytz
 from flask import Blueprint, jsonify, make_response, request
 
-from ..dtos.trenditem_dto import TrendItemDTO
-from ..dtos.type_dto import TypeDTO
+from ..dtos.trenditem_dto import TrendDataDTO
 from ..interfaces.trendserviceinterface import TrendGroupBy, TrendServiceInterface
 from ..routes.decorators import RouteReturn, inject_trendservice
 
@@ -55,7 +54,7 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
-        trends: List[Tuple[TypeDTO, List[TrendItemDTO]]] = trend_service.get_trends(
+        trends: List[TrendDataDTO] = trend_service.get_trends(
             start_date, end_date, group_by_enum
         )
         ret = {"data": [trend.to_dict() for trend in trends], "error": None}
@@ -71,6 +70,8 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
             response.headers["Content-Encoding"] = "gzip"
         return response, 200
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
         ending_time = time.monotonic()

@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 from blockytime.dtos.block_dto import BlockDTO
 from blockytime.interfaces.blockserviceinterface import BlockServiceInterface
@@ -8,7 +8,7 @@ from blockytime.models.block import Block
 from blockytime.models.project import Project
 from blockytime.models.type_ import Type
 from sqlalchemy import delete
-from sqlalchemy.engine import Engine, Result
+from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.orm import Session
 
 log = logging.getLogger(__name__)
@@ -24,7 +24,9 @@ class BlockService(BlockServiceInterface):
     def get_cache_key(self, start_date: datetime, end_date: datetime) -> str:
         return f"{start_date.timestamp()}-{end_date.timestamp()}"
 
-    def get_blocks(self, start_date: datetime, end_date: datetime) -> list[BlockDTO]:
+    def get_blocks(
+        self, start_date: datetime, end_date: datetime
+    ) -> Sequence[BlockDTO]:
         cache_key = self.get_cache_key(start_date, end_date)
         if cache_key in self._cache:
             blocks, timestamp = self._cache[cache_key]
@@ -36,14 +38,14 @@ class BlockService(BlockServiceInterface):
             start_ts = int(start_date.timestamp())
             end_ts = int(end_date.timestamp())
 
-            blocks = (
+            blocks2: Sequence[Block] = (
                 session.query(Block)
                 .filter(Block.date >= start_ts, Block.date < end_ts)
                 .order_by(Block.date)
                 .all()
             )
             self._cache[cache_key] = (
-                [block.to_dto() for block in blocks],
+                list(map(lambda b: b.to_dto(), blocks2)),
                 datetime.now() + timedelta(seconds=1),
             )
 
@@ -63,7 +65,7 @@ class BlockService(BlockServiceInterface):
                         if block.operation == "upsert":
                             assert block.type_ is not None
                         if block.operation in ["delete", "upsert"]:
-                            result: Result = session.execute(
+                            result: CursorResult = session.execute(
                                 delete(Block).where(Block.date == block.date)
                             )
                             log.info(

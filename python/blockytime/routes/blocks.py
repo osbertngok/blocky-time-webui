@@ -3,7 +3,7 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import List
+from typing import List, Sequence
 
 import pytz
 from flask import Blueprint, jsonify, make_response, request
@@ -46,7 +46,7 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
-        blocks: List[BlockDTO] = block_service.get_blocks(start_date, end_date)
+        blocks: Sequence[BlockDTO] = block_service.get_blocks(start_date, end_date)
         ret = {"data": [block.to_dict() for block in blocks], "error": None}
         gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()
         if gzip_supported:
@@ -60,6 +60,8 @@ def get_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             response.headers["Content-Encoding"] = "gzip"
         return response, 200
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
         ending_time = time.monotonic()
@@ -145,7 +147,6 @@ def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             return jsonify({"error": "expecting list of blocks"}), 400
     except Exception as e:
         import traceback
-
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -156,6 +157,5 @@ def update_blocks(block_service: BlockServiceInterface) -> RouteReturn:
             return jsonify({"error": "Failed to update blocks"}), 500
     except Exception as e:
         import traceback
-
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

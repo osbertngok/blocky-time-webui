@@ -1,11 +1,10 @@
 from datetime import date, datetime
-from typing import Callable, List
+from typing import Any, Dict, List, cast
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, func, literal
 from sqlalchemy.engine import Engine, Row
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import ColumnElement
 
 from ..dtos.trenditem_dto import TrendDataDTO, TrendDataPoint
 from ..dtos.type_dto import TypeDTO
@@ -26,11 +25,11 @@ def get_local_midnight_timestamp(d: date, tz: ZoneInfo = SERVER_TZ) -> int:
 
 
 def get_trend_data(
-    session,
+    session: Session,
     start_ts: int,
     end_ts: int,
-    time_formatter: Callable[[ColumnElement], ColumnElement],
-) -> List[Row]:
+    time_format_str: str,
+) -> List[Row[Any]]:
     """
     Get trend data with customizable time grouping.
 
@@ -38,13 +37,19 @@ def get_trend_data(
         session: SQLAlchemy session
         start_ts: Start timestamp
         end_ts: End timestamp
-        time_formatter: Function that formats Block.date into desired grouping format
-            e.g., for daily: lambda d: func.strftime('%Y-%m-%d', func.datetime(d, 'unixepoch'))
-            e.g., for monthly: lambda d: func.strftime('%Y-%m-01', func.datetime(d, 'unixepoch'))
+        time_format_str: Format string for the time grouping
+            e.g., for daily: "%Y-%m-%d"
+            e.g., for weekly: "%Y-%W-1"
+            e.g., for monthly: "%Y-%m-01"
     """
     # First, create a subquery for all possible dates in the range
     date_series = (
-        session.query(time_formatter(Block.date).label("time"))
+        session.query(
+            func.strftime(
+                time_format_str,
+                func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch"),
+            ).label("time")
+        )
         .where(Block.date >= start_ts, Block.date < end_ts)
         .group_by("time")
         .subquery()
@@ -69,7 +74,7 @@ def get_trend_data(
     )
 
     # Finally, left join with actual block counts
-    return (
+    results = (
         session.query(
             base.c.uid.label("type_uid"),
             base.c.name.label("type_name"),
@@ -85,7 +90,11 @@ def get_trend_data(
             Block,
             and_(
                 Block.type_uid == base.c.uid,
-                time_formatter(Block.date) == base.c.time,
+                func.strftime(
+                    time_format_str,
+                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch"),
+                )
+                == base.c.time,
                 Block.date >= start_ts,
                 Block.date < end_ts,
             ),
@@ -94,6 +103,8 @@ def get_trend_data(
         .order_by(base.c.time, base.c.priority.desc())
         .all()
     )
+
+    return cast(List[Row[Any]], results)
 
 
 class TrendService(TrendServiceInterface):
@@ -116,24 +127,19 @@ class TrendService(TrendServiceInterface):
         end_ts = get_local_midnight_timestamp(end_date)
 
         with Session(self._engine) as session:
-            time_formatters = {
-                TrendGroupBy.DAY: lambda d: func.strftime(
-                    "%Y-%m-%d", func.datetime(d + SERVER_TZ_OFFSET, "unixepoch")
-                ),
-                TrendGroupBy.WEEK: lambda d: func.strftime(
-                    "%Y-%W-1", func.datetime(d + SERVER_TZ_OFFSET, "unixepoch")
-                ),
-                TrendGroupBy.MONTH: lambda d: func.strftime(
-                    "%Y-%m-01", func.datetime(d + SERVER_TZ_OFFSET, "unixepoch")
-                ),
+
+            time_format_str = {
+                TrendGroupBy.DAY: "%Y-%m-%d",
+                TrendGroupBy.WEEK: "%Y-%W-1",
+                TrendGroupBy.MONTH: "%Y-%m-01",
             }
 
             results = get_trend_data(
-                session, start_ts, end_ts, time_formatters[group_by]
+                session, start_ts, end_ts, time_format_str[group_by]
             )
 
             # Process results into TrendData format
-            trends_by_type = {}
+            trends_by_type: Dict[int, List[TrendDataPoint]] = {}
             type_dict = {}
             for r in results:
                 if r.type_uid not in trends_by_type:

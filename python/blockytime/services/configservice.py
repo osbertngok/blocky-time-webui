@@ -23,8 +23,7 @@ class ConfigService(ConfigServiceInterface):
                 elif config.key == "disablePixelate":
                     ret.disable_pixelate = config.value == "I_1"
                 elif config.key == "specialTimePeriod":
-                    ret.special_time_period = [
-                        tuple(map(int, s.split("-")))
-                        for s in config.value.replace("S_", "").split(",")
-                    ]
+                    for s in config.value.replace("S_", "").split(","):
+                        start, end = map(int, s.split("-")[:2])
+                        ret.special_time_period.append((start, end))
         return ret

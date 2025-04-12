@@ -60,6 +60,8 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
             response.headers["Content-Encoding"] = "gzip"
         return response, 200
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
         ending_time = time.monotonic()

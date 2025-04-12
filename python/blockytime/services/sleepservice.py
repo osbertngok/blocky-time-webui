@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from typing import cast
 
 import pytz
 from blockytime.models.block import Block
@@ -75,5 +76,5 @@ class SleepService(SleepServiceInterface):
                     duration=row.duration / 3600.0,  # Convert seconds to hours
                 )
                 for row in results
-                if row.duration / 3600.0 - row.count * 0.25 <= 1.0
+                if row.duration / 3600.0 - cast(float, row.count) * 0.25 <= 1.0
             ]
