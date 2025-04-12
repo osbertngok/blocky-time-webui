@@ -61,11 +61,12 @@ def get_trend_data(
     # Create a cross join between dates and types to get all possible combinations
     base = (
         session.query(
-            date_series.c.time,
             types.c.uid,
+            date_series.c.time,
         )
         .select_from(date_series)
         .join(types, literal(1) == literal(1))
+        .order_by(types.c.uid, date_series.c.time)
         .subquery()
     )
 
@@ -81,14 +82,14 @@ def get_trend_data(
                 "duration"
             ),
         )
-        .group_by(Block.type_uid, func.strftime(
-                    time_format_str,
-                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
-                ))
-        .order_by(func.strftime(
-                    time_format_str,
-                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
-        ))
+        .group_by(
+            Block.type_uid,
+            "time_label"
+        )
+        .order_by(
+            Block.type_uid,
+            "time_label"
+        )
         .subquery()
     )
     # Finally, left join with actual block counts
