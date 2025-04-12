@@ -12,30 +12,11 @@ export class TrendService implements TrendServiceInterface {
 
   async getTrends(startDate: Date, endDate: Date, groupBy: 'DAY' | 'WEEK' | 'MONTH'): Promise<TrendItemModel[]> {
     try {
-      console.log('getTrends input:', {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        startDateLocal: startDate.toString(),
-        endDateLocal: endDate.toString(),
-        groupBy,
-        startDateTimestamp: startDate.getTime(),
-        endDateTimestamp: endDate.getTime(),
-        timezoneOffset: startDate.getTimezoneOffset()
-      });
-
-      // Use date-fns to format in local timezone
       const startDateStr = format(startDate, 'yyyy-MM-dd');
       const endDateStr = format(endDate, 'yyyy-MM-dd');
       
-      console.log('getTrends converted dates:', {
-        startDateStr,
-        endDateStr,
-        usingDateFns: true
-      });
-      
-      return this.getTrendsByDateString(startDateStr, endDateStr, groupBy);
+      return this.getTrendsByDateString(startDateStr, endDateStr, groupBy.toUpperCase() as 'DAY' | 'WEEK' | 'MONTH');
     } catch (error) {
-      console.error('Error fetching trends:', error);
       throw error;
     }
   }

@@ -69,26 +69,12 @@ export const Trends: React.FC = () => {
   }, [viewType, selectedRange, setSearchParams]);
 
   const handleViewChange = useCallback((event: React.SyntheticEvent, newValue: ViewType) => {
-    console.log('View type changing from', viewType, 'to', newValue);
     setViewType(newValue);
-    const newRange = getCurrentRange(newValue);
-    console.log('New range after view change:', {
-      label: newRange.label,
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
-    });
-    setSelectedRange(newRange);
+    setSelectedRange(getCurrentRange(newValue));
   }, [viewType]);
 
   const timeRanges = useMemo(() => {
-    console.log('Generating time ranges for viewType:', viewType);
-    const ranges = getTimeRanges(viewType);
-    console.log('Generated ranges:', ranges.map(r => ({
-      label: r.label,
-      start: format(r.start, 'yyyy-MM-dd'),
-      end: format(r.end, 'yyyy-MM-dd')
-    })));
-    return ranges;
+    return getTimeRanges(viewType);
   }, [viewType]);
 
   // Navigation handlers
@@ -114,11 +100,10 @@ export const Trends: React.FC = () => {
 
   function getCurrentRange(type: ViewType): TimeRange {
     const now = new Date();
-    console.log('getCurrentRange input:', { type, now });
     let result: TimeRange;
     
     switch (type) {
-      case 'weekly':
+      case 'weekly': {
         const weekStart = startOfWeek(now, { weekStartsOn: 1 });
         result = {
           start: weekStart,
@@ -126,7 +111,8 @@ export const Trends: React.FC = () => {
           label: format(now, "'Week of' MMM d, yyyy")
         };
         break;
-      case 'monthly':
+      }
+      case 'monthly': {
         const monthStart = startOfMonth(now);
         result = {
           start: monthStart,
@@ -134,7 +120,8 @@ export const Trends: React.FC = () => {
           label: format(now, 'MMMM yyyy')
         };
         break;
-      case 'yearly':
+      }
+      case 'yearly': {
         const yearStart = startOfYear(now);
         result = {
           start: yearStart,
@@ -142,18 +129,13 @@ export const Trends: React.FC = () => {
           label: format(now, 'yyyy')
         };
         break;
+      }
     }
-    console.log('getCurrentRange output:', { 
-      result,
-      startFormatted: format(result.start, 'yyyy-MM-dd'),
-      endFormatted: format(result.end, 'yyyy-MM-dd')
-    });
     return result;
   }
 
   function getTimeRanges(type: ViewType): TimeRange[] {
     const now = new Date();
-    console.log('getTimeRanges input:', { type, now });
     
     const ranges: TimeRange[] = [];
     for (let i = -6; i <= 6; i++) {
@@ -185,13 +167,6 @@ export const Trends: React.FC = () => {
           break;
       }
       
-      console.log(`Range ${i}:`, {
-        date: format(date, 'yyyy-MM-dd'),
-        start: format(start, 'yyyy-MM-dd'),
-        end: format(end, 'yyyy-MM-dd'),
-        label
-      });
-
       ranges.push({ start, end, label });
     }
     return ranges;

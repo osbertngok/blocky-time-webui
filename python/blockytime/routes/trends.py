@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime
 from typing import List, Tuple
 import time
@@ -14,8 +13,10 @@ from ..dtos.type_dto import TypeDTO
 from ..interfaces.trendserviceinterface import TrendServiceInterface, TrendGroupBy
 from ..routes.decorators import RouteReturn, inject_trendservice
 
+import logging
 
 log = logging.getLogger(__name__)
+
 
 bp = Blueprint("trends", __name__)
 

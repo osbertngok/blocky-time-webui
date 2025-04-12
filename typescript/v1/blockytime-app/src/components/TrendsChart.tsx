@@ -45,25 +45,9 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
       try {
         setLoading(true);
         setError(null);
-        
-        // Ensure we're working with Date objects
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        
-        console.log('TrendsChart fetchData:', {
-          startDate,
-          endDate,
-          startFormatted: format(start, 'yyyy-MM-dd'),
-          endFormatted: format(end, 'yyyy-MM-dd'),
-          groupBy
-        });
-        
-        const serviceGroupBy = groupBy.toUpperCase() as 'DAY' | 'MONTH';
-        const trends = await trendService.getTrends(start, end, serviceGroupBy);
-        console.log('TrendsChart received data:', trends);
+        const trends = await trendService.getTrends(startDate, endDate, groupBy.toUpperCase() as 'DAY' | 'MONTH');
         setData(trends);
       } catch (err) {
-        console.error('Error fetching trends:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
