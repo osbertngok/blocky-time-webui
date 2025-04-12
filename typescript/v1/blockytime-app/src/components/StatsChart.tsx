@@ -35,9 +35,21 @@ interface StatsChartProps {
   startDate: Date;
   endDate: Date;
   chartType: ChartType;
+  timeSlot?: {
+    timeSlotMinutes: number;
+    hour: number;
+    minute: number;
+  };
+  title?: string;
 }
 
-export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, chartType }) => {
+export const StatsChart: React.FC<StatsChartProps> = ({ 
+  startDate, 
+  endDate, 
+  chartType,
+  timeSlot,
+  title 
+}) => {
   const [data, setData] = useState<StatsData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +64,13 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
         const startDateStr = format(startDate, 'yyyy-MM-dd');
         const endDateStr = format(endDate, 'yyyy-MM-dd');
         
-        const stats = await statsService.getStats(startDateStr, endDateStr);
+        const stats = await statsService.getStats(
+          startDateStr, 
+          endDateStr,
+          timeSlot?.timeSlotMinutes,
+          timeSlot?.hour,
+          timeSlot?.minute
+        );
         setData(stats);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -62,21 +80,17 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
     };
 
     fetchData();
-  }, [startDate, endDate, statsService]);
+  }, [startDate, endDate, statsService, timeSlot]);
 
-  const totalDuration = data.reduce((sum, item) => sum + item.duration, 0); // in hours
-
-  // Calculate the number of days between start and end dates
+  const totalDuration = data.reduce((sum, item) => sum + item.duration, 0);
   const daysDiff = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-
-  // Convert seconds to hours and divide by number of days
-  const getDailyHours = (duration: number) => duration / daysDiff;
+  const getDailyHours = (duration: number) => timeSlot ? duration : duration / daysDiff;
 
   const chartData: ChartJSData<ChartType, number[], string> = {
     labels: data.map(item => item.type.name || 'Unknown'),
     datasets: [
       {
-        label: chartType === 'bar' ? 'Average Hours per Day' : undefined,
+        label: chartType === 'bar' ? (timeSlot ? 'Hours' : 'Average Hours per Day') : undefined,
         data: data.map(item => getDailyHours(item.duration)),
         backgroundColor: data.map(item => getColorFromDecimal(item.type.color) || '#cccccc'),
         borderColor: 'rgba(255, 255, 255, 0.5)',
@@ -93,6 +107,10 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
         position: 'right' as const,
         display: true,
       },
+      title: {
+        display: !!title,
+        text: title || ''
+      },
       datalabels: {
         color: '#fff',
         font: {
@@ -100,9 +118,10 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
           size: 12
         },
         formatter: (value: number, context: Context) => {
-          const percentage = (value * daysDiff / totalDuration * 100).toFixed(1);
+          const totalValue = timeSlot ? value : value * daysDiff;
+          const percentage = (totalValue / totalDuration * 100).toFixed(1);
           const label = context.chart.data.labels?.[context.dataIndex];
-          return `${label}\n${percentage}%\n(${value.toFixed(1)} hrs/day)`;
+          return `${label}\n${percentage}%\n(${value.toFixed(1)} hrs${timeSlot ? '' : '/day'})`;
         },
         textAlign: 'center' as const,
       },
@@ -116,9 +135,12 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
       tooltip: {
         callbacks: {
           label: (context: TooltipItem<'pie'>) => {
-            const value = context.raw as number * daysDiff;
-            const percentage = ((context.raw as number * daysDiff) / totalDuration * 100).toFixed(1);
-            return `${context.label}: ${value.toFixed(1)} total hours (${(context.raw as number).toFixed(1)} hrs/day, ${percentage}%)`;
+            const value = timeSlot ? 
+              context.raw as number : 
+              (context.raw as number) * daysDiff;
+            const percentage = (value / totalDuration * 100).toFixed(1);
+            const hourRate = context.raw as number;
+            return `${context.label}: ${value.toFixed(1)} total hours (${hourRate.toFixed(1)} hrs${timeSlot ? '' : '/day'}, ${percentage}%)`;
           },
         },
       },
@@ -132,9 +154,12 @@ export const StatsChart: React.FC<StatsChartProps> = ({ startDate, endDate, char
       tooltip: {
         callbacks: {
           label: (context: TooltipItem<'bar'>) => {
-            const value = context.raw as number * daysDiff;
-            const percentage = ((context.raw as number * daysDiff) / totalDuration * 100).toFixed(1);
-            return `${context.label}: ${value.toFixed(1)} total hours (${(context.raw as number).toFixed(1)} hrs/day, ${percentage}%)`;
+            const value = timeSlot ? 
+              context.raw as number : 
+              (context.raw as number) * daysDiff;
+            const percentage = (value / totalDuration * 100).toFixed(1);
+            const hourRate = context.raw as number;
+            return `${context.label}: ${value.toFixed(1)} total hours (${hourRate.toFixed(1)} hrs${timeSlot ? '' : '/day'}, ${percentage}%)`;
           },
         },
       },

@@ -12,6 +12,7 @@ from ..interfaces.trendserviceinterface import TrendGroupBy, TrendServiceInterfa
 from ..models.block import Block
 from ..models.type_ import Type
 from ..utils import timeit
+
 # Server timezone configuration
 SERVER_TZ = ZoneInfo("Asia/Hong_Kong")
 SERVER_TZ_OFFSET = 8 * 3600  # 8 hours in seconds

@@ -6,5 +6,11 @@ export interface StatsData {
 }
 
 export interface StatsServiceInterface {
-  getStats(startDate: string, endDate: string): Promise<StatsData[]>;
+  getStats(
+    startDate: string, 
+    endDate: string, 
+    timeSlotMinutes?: number,
+    hour?: number,
+    minute?: number
+  ): Promise<StatsData[]>;
 }

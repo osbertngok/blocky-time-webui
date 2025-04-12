@@ -7,10 +7,31 @@ export class StatsService implements StatsServiceInterface {
     this.apiBaseUrl = apiBaseUrl;
   }
 
-  async getStats(startDate: string, endDate: string): Promise<StatsData[]> {
+  async getStats(
+    startDate: string,
+    endDate: string,
+    timeSlotMinutes?: number,
+    hour?: number,
+    minute?: number
+  ): Promise<StatsData[]> {
     try {
+      const params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate
+      });
+
+      if (timeSlotMinutes !== undefined) {
+        params.append('time_slot_minutes', timeSlotMinutes.toString());
+      }
+      if (hour !== undefined) {
+        params.append('hour', hour.toString());
+      }
+      if (minute !== undefined) {
+        params.append('minute', minute.toString());
+      }
+
       const response = await fetch(
-        `${this.apiBaseUrl}/stats?start_date=${startDate}&end_date=${endDate}`
+        `${this.apiBaseUrl}/stats?${params}`
       );
       
       if (!response.ok) {

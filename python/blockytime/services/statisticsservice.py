@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from typing import List, Optional, Dict
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, text
 from sqlalchemy.engine import Engine
@@ -11,6 +12,10 @@ from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from ..models.block import Block
 from ..models.type_ import Type
 from ..utils import timeit
+
+# Server timezone configuration
+SERVER_TZ = ZoneInfo("Asia/Hong_Kong")
+SERVER_TZ_OFFSET = 8 * 3600  # 8 hours in seconds
 
 
 class StatisticsService(StatisticsServiceInterface):
@@ -30,8 +35,10 @@ class StatisticsService(StatisticsServiceInterface):
         if time_slot_minutes not in (15, 30):
             raise ValueError("time_slot_minutes must be either 15 or 30")
         
-        if minute is not None and minute % time_slot_minutes != 0:
-            raise ValueError(f"minute must be a multiple of {time_slot_minutes}")
+        # Only validate minute if it's provided
+        if minute is not None:
+            if minute % time_slot_minutes != 0:
+                raise ValueError(f"minute must be a multiple of {time_slot_minutes}. currently it is {minute}")
 
         with Session(self._engine) as session:
             query = session.query(
@@ -39,28 +46,38 @@ class StatisticsService(StatisticsServiceInterface):
                 func.count(Block.uid).label('count')
             )
 
-            # Base time filtering
-            query = query.filter(
-                Block.date >= int(datetime.combine(start_date, datetime.min.time()).timestamp()),
-                Block.date < int(datetime.combine(end_date, datetime.min.time()).timestamp())
+                        # Base time filtering
+            query = session.query(
+                Block.type_uid,
+                func.count(Block.uid).label('count')
             )
 
             # Add time slot filtering if specified
             if hour is not None:
+                # Adjust for HK timezone (UTC+8)
                 query = query.filter(
-                    func.strftime('%H', func.datetime(Block.date, 'unixepoch')) == str(hour).zfill(2)
+                    func.strftime(
+                        '%H',
+                        func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                    ) == str(hour).zfill(2)
                 )
                 
                 if minute is not None:
                     query = query.filter(
                         func.strftime(
                             '%M', 
-                            func.datetime(Block.date, 'unixepoch')
+                            func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
                         ).between(
                             str(minute).zfill(2),
                             str(minute + time_slot_minutes - 1).zfill(2)
                         )
                     )
+
+            # Base time filtering
+            query = query.filter(
+                Block.date >= int(datetime.combine(start_date, datetime.min.time()).timestamp()),
+                Block.date < int(datetime.combine(end_date, datetime.min.time()).timestamp())
+            )
 
             # Type filtering
             if type_uids:
@@ -71,6 +88,17 @@ class StatisticsService(StatisticsServiceInterface):
 
             # Order by duration
             query = query.order_by(text("count DESC"))
+
+            # Print the SQL query
+            print("Generated SQL:", str(query.statement.compile(compile_kwargs={"literal_binds": True})))
+            print("Parameters:", {
+                "start_date": start_date,
+                "end_date": end_date,
+                "hour": hour,
+                "minute": minute,
+                "time_slot_minutes": time_slot_minutes
+            })
+
             # Get types
             type_dict: Dict[int, TypeDTO] = {
                 t.uid: TypeDTO(uid=t.uid, name=t.name, color=t.color, hidden=t.hidden, priority=t.priority)
