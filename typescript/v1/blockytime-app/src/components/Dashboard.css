@@ -2,6 +2,7 @@
   padding: 20px;
   background-color: #f5f5f5;
   min-height: 100vh;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .dashboard-header {
@@ -28,6 +29,18 @@
 .dashboard-content {
   display: grid;
   gap: 24px;
+  width: 100%; /* Ensure content takes full width */
+  position: relative; /* Create new stacking context */
+}
+
+.time-slots-container {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  width: 100%; /* Ensure container takes full width */
+  max-width: 2000px;
+  margin: 0 auto;
+  position: relative; /* Create new stacking context */
 }
 
 .time-slot-section {
@@ -37,8 +50,14 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   height: 600px;
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
+  position: relative; /* Create new stacking context */
+  overflow: hidden; /* Contain any overflow */
+}
+
+@media (max-width: 1024px) {
+  .time-slots-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (min-width: 1024px) {

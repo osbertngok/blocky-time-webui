@@ -102,6 +102,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: false,
     plugins: {
       legend: {
         position: 'right' as const,
