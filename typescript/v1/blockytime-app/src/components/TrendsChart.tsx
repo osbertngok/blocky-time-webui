@@ -76,7 +76,7 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
   const chartData: ChartData<'line'> = {
     labels: data.length > 0 ? data[0].items.map(item => item.timeLabel) : [],
     datasets: data.map((trendData: TrendData) => {
-      const type: TypeModel = trendData.type;
+    const type: TypeModel = trendData.type;
       return {
         label: type.name,
         data: trendData.items.map((item: TrendDataPoint, index: number) => 
@@ -84,7 +84,6 @@ export const TrendsChart: React.FC<TrendsChartProps> = ({ startDate, endDate, gr
         ),
         borderColor: getColorFromDecimal(type.color),
         backgroundColor: getColorFromDecimal(type.color),
-        fill: true,
       };
     }),
   };
