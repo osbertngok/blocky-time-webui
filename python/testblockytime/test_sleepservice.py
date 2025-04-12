@@ -64,16 +64,16 @@ class TestSleepService:
         # Calculate exponentially weighted moving averages
         decay_factor = 0.75
         window_size = 14
-        
+
         def ewma(data):
-            weights = np.array([decay_factor ** i for i in range(window_size)][::-1])
+            weights = np.array([decay_factor**i for i in range(window_size)][::-1])
             weights = weights / weights.sum()  # Normalize weights to sum to 1
             return np.convolve(data, weights, mode="valid")
-        
+
         start_moving_avg = ewma(start_hours)
         end_moving_avg = ewma(end_hours)
         duration_moving_avg = ewma(durations)
-        moving_avg_dates = dates[window_size - 1:]  # Align dates with moving average
+        moving_avg_dates = dates[window_size - 1 :]  # Align dates with moving average
 
         # Create the plot with two y-axes
         fig, ax1 = plt.subplots(figsize=(12, 6))

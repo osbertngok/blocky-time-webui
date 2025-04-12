@@ -7,9 +7,9 @@ from flask import current_app
 
 from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..interfaces.configserviceinterface import ConfigServiceInterface
-from ..interfaces.typeserviceinterface import TypeServiceInterface
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from ..interfaces.trendserviceinterface import TrendServiceInterface
+from ..interfaces.typeserviceinterface import TypeServiceInterface
 from ..services.di import FlaskWithServiceProvider, get_service_provider
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]
@@ -71,6 +71,7 @@ def inject_configservice(f: Callable[..., R]) -> Callable[..., R]:
 
     return wrapper
 
+
 def inject_statisticsservice(f: Callable[..., R]) -> Callable[..., R]:
     """Inject statistics service as named argument"""
 
@@ -84,6 +85,7 @@ def inject_statisticsservice(f: Callable[..., R]) -> Callable[..., R]:
 
     return wrapper
 
+
 def inject_trendservice(f: Callable[..., R]) -> Callable[..., R]:
     """Inject trend service as named argument"""
 
@@ -94,5 +96,5 @@ def inject_trendservice(f: Callable[..., R]) -> Callable[..., R]:
         )
         service = service_provider.get(TrendServiceInterface)  # type: ignore
         return f(trend_service=service, *args, **kwargs)
-    
+
     return wrapper

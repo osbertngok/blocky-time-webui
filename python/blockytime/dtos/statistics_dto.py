@@ -9,6 +9,7 @@ from .type_dto import TypeDTO
 class StatisticsDTO(BaseDTO):
     type_: TypeDTO
     duration: float
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             **super().to_dict(),

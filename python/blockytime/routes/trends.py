@@ -1,19 +1,17 @@
-from datetime import datetime
-from typing import List, Tuple
-import time
 import gzip
 import json
-from enum import Enum
+import logging
+import time
+from datetime import datetime
+from typing import List, Tuple
 
 import pytz
-from flask import Blueprint, jsonify, request, make_response
+from flask import Blueprint, jsonify, make_response, request
 
 from ..dtos.trenditem_dto import TrendItemDTO
 from ..dtos.type_dto import TypeDTO
-from ..interfaces.trendserviceinterface import TrendServiceInterface, TrendGroupBy
+from ..interfaces.trendserviceinterface import TrendGroupBy, TrendServiceInterface
 from ..routes.decorators import RouteReturn, inject_trendservice
-
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -42,7 +40,7 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
         group_by: str | None = request.args.get("group_by")
         if group_by is None:
             return jsonify({"error": "group_by is required"}), 400
-        
+
         try:
             group_by_enum: TrendGroupBy = TrendGroupBy(group_by)
         except ValueError:
@@ -57,23 +55,23 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
-        trends: List[Tuple[TypeDTO, List[TrendItemDTO]]] = trend_service.get_trends(start_date, end_date, group_by_enum)
+        trends: List[Tuple[TypeDTO, List[TrendItemDTO]]] = trend_service.get_trends(
+            start_date, end_date, group_by_enum
+        )
         ret = {"data": [trend.to_dict() for trend in trends], "error": None}
-        gzip_supported = 'gzip' in request.headers.get('Accept-Encoding','').lower()
+        gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()
         if gzip_supported:
-            content = gzip.compress(json.dumps(ret).encode('utf-8'), 5)
+            content = gzip.compress(json.dumps(ret).encode("utf-8"), 5)
         else:
-            content = json.dumps(ret).encode('utf-8')
+            content = json.dumps(ret).encode("utf-8")
         response = make_response(content)
-        response.headers['Content-Type'] = 'application/json'
-        response.headers['Content-Length'] = str(len(content))
+        response.headers["Content-Type"] = "application/json"
+        response.headers["Content-Length"] = str(len(content))
         if gzip_supported:
-            response.headers['Content-Encoding'] = 'gzip'
+            response.headers["Content-Encoding"] = "gzip"
         return response, 200
     except Exception as e:
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
         ending_time = time.monotonic()
         log.info(f"get_trends took {ending_time - starting_time} seconds")
-
-

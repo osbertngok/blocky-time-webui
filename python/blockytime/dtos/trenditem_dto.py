@@ -1,7 +1,8 @@
+from dataclasses import dataclass
+from typing import Any, Dict, List
+
 from .base_dto import BaseDTO
 from .type_dto import TypeDTO
-from dataclasses import dataclass
-from typing import Dict, Any, List
 
 
 @dataclass
@@ -17,7 +18,8 @@ class TrendItemDTO(BaseDTO):
             "type": self.type_.to_dict(),
             "duration": self.duration,
         }
-    
+
+
 @dataclass
 class TrendDataPoint(BaseDTO):
     time_label: str
@@ -30,6 +32,7 @@ class TrendDataPoint(BaseDTO):
             "duration": self.duration,
         }
 
+
 @dataclass
 class TrendDataDTO(BaseDTO):
     type_: TypeDTO
@@ -39,5 +42,5 @@ class TrendDataDTO(BaseDTO):
         return {
             **super().to_dict(),
             "type": self.type_.to_dict(),
-            "items": [item.to_dict() for item in self.items]
+            "items": [item.to_dict() for item in self.items],
         }

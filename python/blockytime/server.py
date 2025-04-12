@@ -14,19 +14,20 @@ from sqlalchemy.exc import OperationalError
 from .interfaces.blockserviceinterface import BlockServiceInterface
 from .interfaces.configdict import ConfigDict
 from .interfaces.configserviceinterface import ConfigServiceInterface
-from .interfaces.typeserviceinterface import TypeServiceInterface
 from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .interfaces.trendserviceinterface import TrendServiceInterface
+from .interfaces.typeserviceinterface import TypeServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
-from .routes import blocks, configs, types, stats, trends
+from .routes import blocks, configs, stats, trends, types
 from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
 from .services.di import FlaskWithServiceProvider, ServiceProvider
-from .services.typeservice import TypeService
 from .services.statisticsservice import StatisticsService
 from .services.trendservice import TrendService
+from .services.typeservice import TypeService
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,

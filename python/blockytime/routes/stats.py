@@ -1,12 +1,12 @@
-import logging
-from datetime import datetime
-from typing import List
-import time
 import gzip
 import json
+import logging
+import time
+from datetime import datetime
+from typing import List
 
 import pytz
-from flask import Blueprint, jsonify, request, make_response
+from flask import Blueprint, jsonify, make_response, request
 
 from ..dtos.statistics_dto import StatisticsDTO
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
@@ -44,18 +44,20 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
         return jsonify({"error": "Invalid date format"}), 400
 
     try:
-        stats: List[StatisticsDTO] = statistics_service.get_statistics(start_date, end_date)
+        stats: List[StatisticsDTO] = statistics_service.get_statistics(
+            start_date, end_date
+        )
         ret = {"data": [stat.to_dict() for stat in stats], "error": None}
-        gzip_supported = 'gzip' in request.headers.get('Accept-Encoding','').lower()
+        gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()
         if gzip_supported:
-            content = gzip.compress(json.dumps(ret).encode('utf-8'), 5)
+            content = gzip.compress(json.dumps(ret).encode("utf-8"), 5)
         else:
-            content = json.dumps(ret).encode('utf-8')
+            content = json.dumps(ret).encode("utf-8")
         response = make_response(content)
-        response.headers['Content-Type'] = 'application/json'
-        response.headers['Content-Length'] = str(len(content))
+        response.headers["Content-Type"] = "application/json"
+        response.headers["Content-Length"] = str(len(content))
         if gzip_supported:
-            response.headers['Content-Encoding'] = 'gzip'
+            response.headers["Content-Encoding"] = "gzip"
         return response, 200
     except Exception as e:
         return jsonify({"data": None, "error": str(e)}), 500
