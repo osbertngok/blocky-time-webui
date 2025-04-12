@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
@@ -19,7 +19,8 @@ import {
   subWeeks,
   subMonths,
   subYears,
-  format
+  format,
+  parse
 } from 'date-fns';
 import './Trends.css';
 import { TrendsChart } from './TrendsChart';
@@ -34,9 +35,51 @@ interface TimeRange {
 
 export const Trends: React.FC = () => {
   const navigate = useNavigate();
-  const [viewType, setViewType] = useState<ViewType>('monthly');
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Add logging when ranges are generated
+  // Read initial values from URL or use defaults
+  const initialViewType = (searchParams.get('view') as ViewType) || 'monthly';
+  const initialStartDate = searchParams.get('start');
+  const initialEndDate = searchParams.get('end');
+  
+  const [viewType, setViewType] = useState<ViewType>(initialViewType);
+  
+  // Initialize selectedRange from URL params or get current range
+  const [selectedRange, setSelectedRange] = useState(() => {
+    if (initialStartDate && initialEndDate) {
+      return {
+        start: parse(initialStartDate, 'yyyy-MM-dd', new Date()),
+        end: parse(initialEndDate, 'yyyy-MM-dd', new Date()),
+        label: format(parse(initialStartDate, 'yyyy-MM-dd', new Date()), 
+          viewType === 'weekly' ? "'Week of' MMM d, yyyy" :
+          viewType === 'monthly' ? 'MMMM yyyy' : 'yyyy'
+        )
+      };
+    }
+    return getCurrentRange(viewType);
+  });
+
+  // Update URL when view type or range changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('view', viewType);
+    newParams.set('start', format(selectedRange.start, 'yyyy-MM-dd'));
+    newParams.set('end', format(selectedRange.end, 'yyyy-MM-dd'));
+    setSearchParams(newParams, { replace: true });
+  }, [viewType, selectedRange, setSearchParams]);
+
+  const handleViewChange = useCallback((event: React.SyntheticEvent, newValue: ViewType) => {
+    console.log('View type changing from', viewType, 'to', newValue);
+    setViewType(newValue);
+    const newRange = getCurrentRange(newValue);
+    console.log('New range after view change:', {
+      label: newRange.label,
+      start: format(newRange.start, 'yyyy-MM-dd'),
+      end: format(newRange.end, 'yyyy-MM-dd')
+    });
+    setSelectedRange(newRange);
+  }, [viewType]);
+
   const timeRanges = useMemo(() => {
     console.log('Generating time ranges for viewType:', viewType);
     const ranges = getTimeRanges(viewType);
@@ -48,25 +91,26 @@ export const Trends: React.FC = () => {
     return ranges;
   }, [viewType]);
 
-  // Add logging when current range is selected
-  const [selectedRange, setSelectedRange] = useState(() => {
-    const current = getCurrentRange(viewType);
-    console.log('Initial selected range:', {
-      label: current.label,
-      start: format(current.start, 'yyyy-MM-dd'),
-      end: format(current.end, 'yyyy-MM-dd')
-    });
-    return current;
-  });
+  // Navigation handlers
+  const handlePrevious = useCallback(() => {
+    const ranges = getTimeRanges(viewType);
+    const currentIndex = ranges.findIndex(r => 
+      format(r.start, 'yyyy-MM-dd') === format(selectedRange.start, 'yyyy-MM-dd')
+    );
+    if (currentIndex > 0) {
+      setSelectedRange(ranges[currentIndex - 1]);
+    }
+  }, [viewType, selectedRange]);
 
-  // Add logging for range changes
-  useEffect(() => {
-    console.log('Selected range changed:', {
-      label: selectedRange.label,
-      start: format(selectedRange.start, 'yyyy-MM-dd'),
-      end: format(selectedRange.end, 'yyyy-MM-dd')
-    });
-  }, [selectedRange]);
+  const handleNext = useCallback(() => {
+    const ranges = getTimeRanges(viewType);
+    const currentIndex = ranges.findIndex(r => 
+      format(r.start, 'yyyy-MM-dd') === format(selectedRange.start, 'yyyy-MM-dd')
+    );
+    if (currentIndex < ranges.length - 1) {
+      setSelectedRange(ranges[currentIndex + 1]);
+    }
+  }, [viewType, selectedRange]);
 
   function getCurrentRange(type: ViewType): TimeRange {
     const now = new Date();
@@ -153,18 +197,6 @@ export const Trends: React.FC = () => {
     return ranges;
   }
 
-  const handleViewChange = useCallback((event: React.SyntheticEvent, newValue: ViewType) => {
-    console.log('View type changing from', viewType, 'to', newValue);
-    setViewType(newValue);
-    const newRange = getCurrentRange(newValue);
-    console.log('New range after view change:', {
-      label: newRange.label,
-      start: format(newRange.start, 'yyyy-MM-dd'),
-      end: format(newRange.end, 'yyyy-MM-dd')
-    });
-    setSelectedRange(newRange);
-  }, [viewType]);
-
   return (
     <div className="trends-page">
       <div className="trends-header">
@@ -189,25 +221,13 @@ export const Trends: React.FC = () => {
 
         <div className="date-range-selector">
           <IconButton 
-            onClick={() => {
-              const ranges = getTimeRanges(viewType);
-              const currentIndex = ranges.findIndex(r => r.label === selectedRange.label);
-              if (currentIndex > 0) {
-                setSelectedRange(ranges[currentIndex - 1]);
-              }
-            }}
+            onClick={handlePrevious}
           >
             <ChevronLeft />
           </IconButton>
           <span className="date-range">{selectedRange.label}</span>
           <IconButton 
-            onClick={() => {
-              const ranges = getTimeRanges(viewType);
-              const currentIndex = ranges.findIndex(r => r.label === selectedRange.label);
-              if (currentIndex < ranges.length - 1) {
-                setSelectedRange(ranges[currentIndex + 1]);
-              }
-            }}
+            onClick={handleNext}
           >
             <ChevronRight />
           </IconButton>
