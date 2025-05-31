@@ -30,7 +30,8 @@ class StatisticsService(StatisticsServiceInterface):
         type_uids: Optional[List[int]] = None,
         time_slot_minutes: int = 30,
         hour: Optional[int] = None,
-        minute: Optional[int] = None
+        minute: Optional[int] = None,
+        day_of_week: Optional[int] = None
     ) -> List[StatisticsDTO]:
         if time_slot_minutes not in (15, 30):
             raise ValueError("time_slot_minutes must be either 15 or 30")
@@ -41,12 +42,6 @@ class StatisticsService(StatisticsServiceInterface):
                 raise ValueError(f"minute must be a multiple of {time_slot_minutes}. currently it is {minute}")
 
         with Session(self._engine) as session:
-            query = session.query(
-                Block.type_uid,
-                func.count(Block.uid).label('count')
-            )
-
-                        # Base time filtering
             query = session.query(
                 Block.type_uid,
                 func.count(Block.uid).label('count')
@@ -73,6 +68,15 @@ class StatisticsService(StatisticsServiceInterface):
                         )
                     )
 
+            # Add day of week filtering if specified
+            if day_of_week is not None:
+                query = query.filter(
+                    func.strftime(
+                        '%w',
+                        func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                    ) == str(day_of_week)
+                )
+
             # Base time filtering
             query = query.filter(
                 Block.date >= int(datetime.combine(start_date, datetime.min.time()).timestamp()),
@@ -96,7 +100,8 @@ class StatisticsService(StatisticsServiceInterface):
                 "end_date": end_date,
                 "hour": hour,
                 "minute": minute,
-                "time_slot_minutes": time_slot_minutes
+                "time_slot_minutes": time_slot_minutes,
+                "day_of_week": day_of_week
             })
 
             # Get types

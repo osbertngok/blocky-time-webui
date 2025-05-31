@@ -1,3 +1,20 @@
+.time-slots-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.time-slots-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 24px;
+}
+
+.days-selector {
+  min-width: 150px;
+}
+
 .time-slots-container {
   display: grid;
   gap: 24px;

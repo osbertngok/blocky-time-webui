@@ -12,7 +12,8 @@ export class StatsService implements StatsServiceInterface {
     endDate: string,
     timeSlotMinutes?: number,
     hour?: number,
-    minute?: number
+    minute?: number,
+    dayOfWeek?: number
   ): Promise<StatsData[]> {
     try {
       const params = new URLSearchParams({
@@ -28,6 +29,9 @@ export class StatsService implements StatsServiceInterface {
       }
       if (minute !== undefined) {
         params.append('minute', minute.toString());
+      }
+      if (dayOfWeek !== undefined) {
+        params.append('day_of_week', dayOfWeek.toString());
       }
 
       const response = await fetch(

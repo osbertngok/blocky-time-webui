@@ -48,9 +48,10 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
         time_slot_minutes = request.args.get('time_slot_minutes', type=int, default=30)
         hour = request.args.get('hour', type=int, default=None)
         minute = request.args.get('minute', type=int, default=None)
+        day_of_week = request.args.get('day_of_week', type=int, default=None)
 
         stats: List[StatisticsDTO] = statistics_service.get_statistics(
-            start_date, end_date, type_uids if type_uids else None, time_slot_minutes, hour, minute
+            start_date, end_date, type_uids if type_uids else None, time_slot_minutes, hour, minute, day_of_week
         )
         ret = {"data": [stat.to_dict() for stat in stats], "error": None}
         gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()

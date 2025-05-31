@@ -11,6 +11,7 @@ export interface StatsServiceInterface {
     endDate: string, 
     timeSlotMinutes?: number,
     hour?: number,
-    minute?: number
+    minute?: number,
+    dayOfWeek?: number
   ): Promise<StatsData[]>;
 }

@@ -41,6 +41,7 @@ interface StatsChartProps {
     minute: number;
   };
   title?: string;
+  dayOfWeek?: number | null;
 }
 
 export const StatsChart: React.FC<StatsChartProps> = ({ 
@@ -48,7 +49,8 @@ export const StatsChart: React.FC<StatsChartProps> = ({
   endDate, 
   chartType,
   timeSlot,
-  title 
+  title,
+  dayOfWeek
 }) => {
   const [data, setData] = useState<StatsData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,8 @@ export const StatsChart: React.FC<StatsChartProps> = ({
           endDateStr,
           timeSlot?.timeSlotMinutes,
           timeSlot?.hour,
-          timeSlot?.minute
+          timeSlot?.minute,
+          dayOfWeek ?? undefined
         );
         setData(stats);
       } catch (err) {
@@ -80,7 +83,7 @@ export const StatsChart: React.FC<StatsChartProps> = ({
     };
 
     fetchData();
-  }, [startDate, endDate, statsService, timeSlot]);
+  }, [startDate, endDate, statsService, timeSlot, dayOfWeek]);
 
   const totalDuration = data.reduce((sum, item) => sum + item.duration, 0);
   const daysDiff = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
