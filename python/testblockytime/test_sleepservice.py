@@ -30,9 +30,13 @@ class TestSleepService:
     def test_get_date_boundaries(self, engine: Engine) -> None:
         service = SleepService(engine)
         
-        # Test case 1: January 1, 2024
+        # Test case 1: January 1, 2024 with 18:00 Asia/Shanghai
         test_date = date(2024, 1, 1)
-        start_ts, end_ts = service._get_date_boundaries(test_date)
+        start_ts, end_ts = service._get_date_boundaries(
+            test_date, 
+            cut_off_hour=18,
+            timezone=pytz.timezone("Asia/Shanghai")
+        )
         
         # Convert timestamps back to datetime for easier verification
         start_dt = datetime.fromtimestamp(start_ts, tz=pytz.UTC)
@@ -41,7 +45,7 @@ class TestSleepService:
         # Verify the timestamps are 24 hours apart
         assert end_dt - start_dt == timedelta(days=1)
         
-        # Verify both timestamps are at 02:00 UTC (which is 10:00 GMT+8)
+        # Verify both timestamps are at 02:00 UTC (which is 18:00 Asia/Shanghai)
         assert start_dt.hour == 2
         assert start_dt.minute == 0
         assert start_dt.second == 0
@@ -53,12 +57,51 @@ class TestSleepService:
         assert start_dt.date() == date(2023, 12, 31)
         assert end_dt.date() == test_date
 
+    def test_get_date_boundaries_different_timezone(self, engine: Engine) -> None:
+        service = SleepService(engine)
+        
+        # Test case: January 1, 2024 with 15:00 New York time
+        test_date = date(2024, 1, 1)
+        ny_tz = pytz.timezone("America/New_York")
+        start_ts, end_ts = service._get_date_boundaries(
+            test_date, 
+            cut_off_hour=15, 
+            timezone=ny_tz
+        )
+        
+        # Convert timestamps back to datetime for easier verification
+        start_dt = datetime.fromtimestamp(start_ts, tz=pytz.UTC)
+        end_dt = datetime.fromtimestamp(end_ts, tz=pytz.UTC)
+        
+        # Convert to New York time for verification
+        start_dt_ny = start_dt.astimezone(ny_tz)
+        end_dt_ny = end_dt.astimezone(ny_tz)
+        
+        # Verify the timestamps are 24 hours apart
+        assert end_dt - start_dt == timedelta(days=1)
+        
+        # Verify both timestamps are at 15:00 New York time
+        assert start_dt_ny.hour == 15
+        assert start_dt_ny.minute == 0
+        assert start_dt_ny.second == 0
+        assert end_dt_ny.hour == 15
+        assert end_dt_ny.minute == 0
+        assert end_dt_ny.second == 0
+        
+        # Verify start is from previous day
+        assert start_dt_ny.date() == date(2023, 12, 31)
+        assert end_dt_ny.date() == test_date
+
     def test_get_date_boundaries_leap_year(self, engine: Engine) -> None:
         service = SleepService(engine)
         
         # Test case 2: February 29, 2024 (leap year)
         test_date = date(2024, 2, 29)
-        start_ts, end_ts = service._get_date_boundaries(test_date)
+        start_ts, end_ts = service._get_date_boundaries(
+            test_date,
+            cut_off_hour=18,
+            timezone=pytz.timezone("Asia/Shanghai")
+        )
         
         # Convert timestamps back to datetime for easier verification
         start_dt = datetime.fromtimestamp(start_ts, tz=pytz.UTC)
@@ -67,7 +110,7 @@ class TestSleepService:
         # Verify the timestamps are 24 hours apart
         assert end_dt - start_dt == timedelta(days=1)
         
-        # Verify both timestamps are at 02:00 UTC (which is 10:00 GMT+8)
+        # Verify both timestamps are at 02:00 UTC (which is 18:00 Asia/Shanghai)
         assert start_dt.hour == 2
         assert start_dt.minute == 0
         assert start_dt.second == 0

@@ -18,31 +18,44 @@ class SleepService(SleepServiceInterface):
         self.engine = engine
         self.timezone = pytz.timezone("Asia/Shanghai")
 
-    def _get_date_boundaries(self, date_obj: date) -> tuple[int, int]:
+    def _get_date_boundaries(
+        self, 
+        date_obj: date, 
+        cut_off_hour: int,
+        timezone: pytz.BaseTzInfo
+    ) -> tuple[int, int]:
         """Calculate the Unix epoch timestamps for the sleep day boundaries.
 
         For a given date, returns:
-        - start_timestamp: previous day 18:00 GMT+8 (02:00 UTC)
-        - end_timestamp: current day 18:00 GMT+8 (02:00 UTC)
-        """
-        # Convert date to datetime at 00:00:00
-        start_of_day = datetime.combine(date_obj, datetime.min.time())
+        - start_timestamp: previous day {cut_off_hour}:00 in specified timezone
+        - end_timestamp: current day {cut_off_hour}:00 in specified timezone
 
-        # For start_date: previous day 18:00 GMT+8 (02:00 UTC)
+        Args:
+            date_obj: The date to calculate boundaries for
+            cut_off_hour: The hour in local time to use as the boundary (0-23)
+            timezone: The timezone to use for the cut-off time
+        """
+        # Create naive datetime at 00:00:00
+        naive_start_of_day = datetime.combine(date_obj, datetime.min.time())
+        
+        # Get UTC offset for this date
+        utc_offset = timezone.utcoffset(naive_start_of_day).total_seconds() / 3600
+
+        # For start_date: previous day cut_off_hour:00 in local time
         start_timestamp = int(
-            (start_of_day - timedelta(days=1) + timedelta(hours=10)).timestamp()
+            (naive_start_of_day - timedelta(days=1) + timedelta(hours=cut_off_hour - utc_offset)).timestamp()
         )
 
-        # For end_date: current day 18:00 GMT+8 (02:00 UTC)
-        end_timestamp = int((start_of_day + timedelta(hours=10)).timestamp())
+        # For end_date: current day cut_off_hour:00 in local time
+        end_timestamp = int((naive_start_of_day + timedelta(hours=cut_off_hour - utc_offset)).timestamp())
 
         return start_timestamp, end_timestamp
 
     def get_sleep_stats(self, start_date: date, end_date: date) -> list[SleepStatsDTO]:
         with Session(self.engine) as session:
             # Calculate the Unix epoch timestamps for the boundaries
-            start_timestamp, _ = self._get_date_boundaries(start_date)
-            _, end_timestamp = self._get_date_boundaries(end_date)
+            start_timestamp, _ = self._get_date_boundaries(start_date, 18, self.timezone)
+            _, end_timestamp = self._get_date_boundaries(end_date, 18, self.timezone)
 
             # Calculate sleep day (18:00 GMT+8 to next day 18:00 GMT+8)
             # 14 * 60 * 60 = 14 hours in seconds (18:00 GMT+8 = 10:00 UTC)
