@@ -123,13 +123,20 @@ class TestSleepService:
         assert end_dt.date() == test_date
 
     def test_get_sleep_stats(self, engine: Engine) -> None:
-        # Get blocks from the engine
         tomorrow = date.today() + timedelta(days=1)
+        start_date = date(2025, 1, 1)
+        start_datetime = datetime(2025, 1, 1, 0, 0, 0)
+        end_date = tomorrow
+        cut_off_hour = 18
+        selected_timezone = pytz.timezone("Asia/Shanghai")
+
+        # Get blocks from the engine
+        
         sleep_stats: List[SleepStatsDTO] = SleepService(engine).get_sleep_stats(
-            date(2025, 1, 1), 
-            tomorrow,
-            cut_off_hour=18,
-            timezone=pytz.timezone("Asia/Shanghai")
+            start_date, 
+            end_date,
+            cut_off_hour=cut_off_hour,
+            timezone=selected_timezone
         )
         # Plot sleep duration using matplotlib
         import matplotlib.pyplot as plt
@@ -139,8 +146,8 @@ class TestSleepService:
         sime_day_tuple = [
             (
                 stat.date,
-                ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0,
-                ((stat.end_time - 6 * 3600) % (24 * 3600)) / 3600.0 + 14.0,
+                ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0, # hour in GMT+8, [8, 31)
+                ((stat.end_time - 6 * 3600) % (24 * 3600)) / 3600.0 + 14.0, # hour in GMT+8, [14, 37)
                 stat.duration,
             )
             for stat in sleep_stats
@@ -149,7 +156,7 @@ class TestSleepService:
         sime_day_tuple = [
             (date, start_hour, end_hour, duration)
             for date, start_hour, end_hour, duration in sime_day_tuple
-            if start_hour > 20.0 and end_hour > 24.0 + 3.0
+            if start_hour > 20.0 and end_hour > 24.0 + 3.0 # (20, 31) ~ 8PM - 7AM, (27, 37) ~ 3AM - 1PM
         ]
         # Sort by date
         sime_day_tuple.sort(key=lambda x: x[0])
@@ -212,7 +219,7 @@ class TestSleepService:
         base_date = datetime(1970, 1, 1)
         month_ticks = []
         month_labels = []
-        current_date = datetime(2025, 1, 1)  # Start from January 2025
+        current_date = start_datetime
         while True:
             days_to_next_month = (current_date - base_date).days
             if days_to_next_month > dates[-1]:
