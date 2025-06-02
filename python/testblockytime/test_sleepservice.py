@@ -228,8 +228,8 @@ class TestSleepService:
         window_size = 14
 
         # Calculate moving averages
-        start_moving_avg, end_moving_avg, duration_moving_avg, moving_avg_dates, start_hours, end_hours, dates = self.calculate_sleep_stats(
-            engine=engine,
+        service = SleepService(engine)
+        start_moving_avg, end_moving_avg, duration_moving_avg, moving_avg_dates, start_hours, end_hours, dates = service.calculate_sleep_stats(
             start_date=start_date,
             end_date=end_date,
             cut_off_hour=cut_off_hour,
