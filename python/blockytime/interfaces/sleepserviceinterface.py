@@ -8,23 +8,13 @@ import pytz
 
 class SleepServiceInterface(Protocol):
 
-    def _get_date_boundaries(
+    def get_sleep_stats(
         self, 
-        date_obj: date, 
+        start_date: date, 
+        end_date: date,
         cut_off_hour: int,
         timezone: pytz.BaseTzInfo
-    ) -> tuple[int, int]:
-        """Calculate the Unix epoch timestamps for the sleep day boundaries.
-
-        For a given date, returns:
-        - start_timestamp: previous day {cut_off_hour}:00 in specified timezone
-        - end_timestamp: current day {cut_off_hour}:00 in specified timezone
-
-        Args:
-            date_obj: The date to calculate boundaries for
-            cut_off_hour: The hour in local time to use as the boundary (0-23)
-            timezone: The timezone to use for the cut-off time
-        """
+    ) -> list[SleepStatsDTO]:
         ...
 
     def calculate_sleep_stats(
@@ -37,8 +27,8 @@ class SleepServiceInterface(Protocol):
         end_time_cut_off_hour: int,
         filter_start_time_after: float,
         filter_end_time_after: float,
-        decay_factor: float = 0.1,
-        window_size: int = 7,
+        decay_factor: float = 0.75,
+        window_size: int = 14,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Calculate sleep statistics with moving averages.
 

@@ -58,15 +58,12 @@ class SleepService(SleepServiceInterface):
 
     def get_sleep_stats(
         self, 
-        start_date: datetime, 
-        end_date: datetime,
+        start_date: date, 
+        end_date: date,
         cut_off_hour: int,
         timezone: pytz.BaseTzInfo
     ) -> list[SleepStatsDTO]:
         with Session(self.engine) as session:
-            # Convert datetime to date for boundary calculation
-            start_date_obj = start_date.date()
-            end_date_obj = end_date.date()
             
             # Calculate the Unix epoch timestamps for the boundaries
             start_timestamp, _ = self._get_date_boundaries(start_date, cut_off_hour, timezone)
@@ -151,7 +148,10 @@ class SleepService(SleepServiceInterface):
             )
         """
         # Calculate UTC offset
-        utc_offset: int = int(timezone.utcoffset(datetime.now()).total_seconds() / 3600)
+        utc_off = timezone.utcoffset(datetime.now())
+        if utc_off is None:
+            raise ValueError("Cannot calculate utcoffset")
+        utc_offset: int = int(utc_off.total_seconds() / 3600)
         
         # Get sleep stats from service
         sleep_stats: List[SleepStatsDTO] = self.get_sleep_stats(
