@@ -127,8 +127,11 @@ class TestSleepService:
         start_date = date(2025, 1, 1)
         start_datetime = datetime(2025, 1, 1, 0, 0, 0)
         end_date = tomorrow
-        cut_off_hour = 18
-        selected_timezone = pytz.timezone("Asia/Shanghai")
+        cut_off_hour: int = 18
+        selected_timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Shanghai")
+        utc_offset: int = int(selected_timezone.utcoffset(datetime.now()).total_seconds() / 3600)
+        start_time_cut_off_hour = 8
+        end_time_cut_off_hour = 14
 
         # Get blocks from the engine
         
@@ -146,8 +149,8 @@ class TestSleepService:
         sime_day_tuple = [
             (
                 stat.date,
-                ((stat.start_time) % (24 * 3600)) / 3600.0 + 8.0, # hour in GMT+8, [8, 31)
-                ((stat.end_time - 6 * 3600) % (24 * 3600)) / 3600.0 + 14.0, # hour in GMT+8, [14, 37)
+                ((stat.start_time + utc_offset * 3600 - start_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + start_time_cut_off_hour, # hour in GMT+8, [8, 24+8)
+                ((stat.end_time + utc_offset * 3600 - end_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + end_time_cut_off_hour, # hour in GMT+8, [14, 24+14)
                 stat.duration,
             )
             for stat in sleep_stats
