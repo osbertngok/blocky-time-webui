@@ -8,6 +8,7 @@ from blockytime.services.sleepservice import SleepService
 from pytest import fixture
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
+import pytz
 
 # Configure SQLAlchemy logging
 logging.basicConfig()
@@ -25,6 +26,58 @@ class TestSleepService:
         )
         engine = create_engine(f"sqlite:///{db_file_path}")
         return engine
+
+    def test_get_date_boundaries(self, engine: Engine) -> None:
+        service = SleepService(engine)
+        
+        # Test case 1: January 1, 2024
+        test_date = date(2024, 1, 1)
+        start_ts, end_ts = service._get_date_boundaries(test_date)
+        
+        # Convert timestamps back to datetime for easier verification
+        start_dt = datetime.fromtimestamp(start_ts, tz=pytz.UTC)
+        end_dt = datetime.fromtimestamp(end_ts, tz=pytz.UTC)
+        
+        # Verify the timestamps are 24 hours apart
+        assert end_dt - start_dt == timedelta(days=1)
+        
+        # Verify both timestamps are at 02:00 UTC (which is 10:00 GMT+8)
+        assert start_dt.hour == 2
+        assert start_dt.minute == 0
+        assert start_dt.second == 0
+        assert end_dt.hour == 2
+        assert end_dt.minute == 0
+        assert end_dt.second == 0
+        
+        # Verify start is from previous day
+        assert start_dt.date() == date(2023, 12, 31)
+        assert end_dt.date() == test_date
+
+    def test_get_date_boundaries_leap_year(self, engine: Engine) -> None:
+        service = SleepService(engine)
+        
+        # Test case 2: February 29, 2024 (leap year)
+        test_date = date(2024, 2, 29)
+        start_ts, end_ts = service._get_date_boundaries(test_date)
+        
+        # Convert timestamps back to datetime for easier verification
+        start_dt = datetime.fromtimestamp(start_ts, tz=pytz.UTC)
+        end_dt = datetime.fromtimestamp(end_ts, tz=pytz.UTC)
+        
+        # Verify the timestamps are 24 hours apart
+        assert end_dt - start_dt == timedelta(days=1)
+        
+        # Verify both timestamps are at 02:00 UTC (which is 10:00 GMT+8)
+        assert start_dt.hour == 2
+        assert start_dt.minute == 0
+        assert start_dt.second == 0
+        assert end_dt.hour == 2
+        assert end_dt.minute == 0
+        assert end_dt.second == 0
+        
+        # Verify start is from previous day
+        assert start_dt.date() == date(2024, 2, 28)
+        assert end_dt.date() == test_date
 
     def test_get_sleep_stats(self, engine: Engine) -> None:
         # Get blocks from the engine
