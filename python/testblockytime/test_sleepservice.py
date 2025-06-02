@@ -9,6 +9,7 @@ from pytest import fixture
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 import pytz
+import numpy as np
 
 # Configure SQLAlchemy logging
 logging.basicConfig()
@@ -122,45 +123,75 @@ class TestSleepService:
         assert start_dt.date() == date(2024, 2, 28)
         assert end_dt.date() == test_date
 
-    def test_get_sleep_stats(self, engine: Engine) -> None:
-        tomorrow = date.today() + timedelta(days=1)
-        start_date = date(2025, 1, 1)
-        start_datetime = datetime(2025, 1, 1, 0, 0, 0)
-        end_date = tomorrow
-        cut_off_hour: int = 18
-        selected_timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Shanghai")
-        utc_offset: int = int(selected_timezone.utcoffset(datetime.now()).total_seconds() / 3600)
-        start_time_cut_off_hour = 8
-        end_time_cut_off_hour = 14
+    def calculate_sleep_stats(
+        self,
+        engine: Engine,
+        start_date: date,
+        end_date: date,
+        cut_off_hour: int = 18,
+        timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Shanghai"),
+        start_time_cut_off_hour: int = 8,
+        end_time_cut_off_hour: int = 14,
+        filter_start_time_after: float = 20.0,  # 8 PM
+        filter_end_time_after: float = 27.0,    # 3 AM
+        decay_factor: float = 0.75,
+        window_size: int = 14
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Calculate sleep statistics with moving averages.
 
-        # Get blocks from the engine
-        
+        Args:
+            engine: SQLAlchemy engine
+            start_date: Start date for sleep stats
+            end_date: End date for sleep stats
+            cut_off_hour: Hour in local time to use as sleep day boundary
+            timezone: Timezone to use for calculations
+            start_time_cut_off_hour: Hour to use as reference for start time conversion
+            end_time_cut_off_hour: Hour to use as reference for end time conversion
+            filter_start_time_after: Filter sleep sessions starting after this hour
+            filter_end_time_after: Filter sleep sessions ending after this hour
+            decay_factor: Decay factor for exponential weighted moving average
+            window_size: Window size for moving average calculation
+
+        Returns:
+            Tuple of (
+                start_moving_avg,
+                end_moving_avg,
+                duration_moving_avg,
+                moving_avg_dates,
+                start_hours,
+                end_hours,
+                dates
+            )
+        """
+        # Calculate UTC offset
+        utc_offset: int = int(timezone.utcoffset(datetime.now()).total_seconds() / 3600)
+
+        # Get sleep stats from service
         sleep_stats: List[SleepStatsDTO] = SleepService(engine).get_sleep_stats(
             start_date, 
             end_date,
             cut_off_hour=cut_off_hour,
-            timezone=selected_timezone
+            timezone=timezone
         )
-        # Plot sleep duration using matplotlib
-        import matplotlib.pyplot as plt
-        import numpy as np
 
         # Extract sleep durations
         sime_day_tuple = [
             (
                 stat.date,
-                ((stat.start_time + utc_offset * 3600 - start_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + start_time_cut_off_hour, # hour in GMT+8, [8, 24+8)
-                ((stat.end_time + utc_offset * 3600 - end_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + end_time_cut_off_hour, # hour in GMT+8, [14, 24+14)
+                ((stat.start_time + utc_offset * 3600 - start_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + start_time_cut_off_hour,  # hour in GMT+8, [8, 24+8)
+                ((stat.end_time + utc_offset * 3600 - end_time_cut_off_hour * 3600) % (24 * 3600)) / 3600.0 + end_time_cut_off_hour,  # hour in GMT+8, [14, 24+14)
                 stat.duration,
             )
             for stat in sleep_stats
         ]
+
         # Filtering
         sime_day_tuple = [
             (date, start_hour, end_hour, duration)
             for date, start_hour, end_hour, duration in sime_day_tuple
-            if start_hour > 20.0 and end_hour > 24.0 + 3.0 # (20, 31) ~ 8PM - 7AM, (27, 37) ~ 3AM - 1PM
+            if start_hour > filter_start_time_after and end_hour > filter_end_time_after  # (20, 31) ~ 8PM - 7AM, (27, 37) ~ 3AM - 1PM
         ]
+
         # Sort by date
         sime_day_tuple.sort(key=lambda x: x[0])
 
@@ -169,10 +200,6 @@ class TestSleepService:
         start_hours = np.array([x[1] for x in sime_day_tuple])
         end_hours = np.array([x[2] for x in sime_day_tuple])
         durations = np.array([x[3] for x in sime_day_tuple])
-
-        # Calculate exponentially weighted moving averages
-        decay_factor = 0.75
-        window_size = 14
 
         def ewma(data):
             weights = np.array([decay_factor**i for i in range(window_size)][::-1])
@@ -184,48 +211,64 @@ class TestSleepService:
         duration_moving_avg = ewma(durations)
         moving_avg_dates = dates[window_size - 1 :]  # Align dates with moving average
 
+        return start_moving_avg, end_moving_avg, duration_moving_avg, moving_avg_dates, start_hours, end_hours, dates
+
+    def test_get_sleep_stats(self, engine: Engine) -> None:
+        # Get blocks from the engine
+        tomorrow = date.today() + timedelta(days=1)
+        start_date = date(2025, 1, 1)
+        end_date = tomorrow
+        cut_off_hour: int = 18
+        selected_timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Shanghai")
+        start_time_cut_off_hour = 8
+        end_time_cut_off_hour = 14
+        filter_start_time_after = 20.0  # 8 PM
+        filter_end_time_after = 24.0 + 3.0  # 3 AM
+        decay_factor = 0.75
+        window_size = 14
+
+        # Calculate moving averages
+        start_moving_avg, end_moving_avg, duration_moving_avg, moving_avg_dates, start_hours, end_hours, dates = self.calculate_sleep_stats(
+            engine=engine,
+            start_date=start_date,
+            end_date=end_date,
+            cut_off_hour=cut_off_hour,
+            timezone=selected_timezone,
+            start_time_cut_off_hour=start_time_cut_off_hour,
+            end_time_cut_off_hour=end_time_cut_off_hour,
+            filter_start_time_after=filter_start_time_after,
+            filter_end_time_after=filter_end_time_after,
+            decay_factor=decay_factor,
+            window_size=window_size
+        )
+
+        # Plot sleep duration using matplotlib
+        import matplotlib.pyplot as plt
+        import numpy as np
+
         # Create the plot with two y-axes
         fig, ax1 = plt.subplots(figsize=(12, 6))
 
         # Plot start/end times on the left y-axis
         ax1.plot(dates, start_hours, "b.", alpha=0.3, label="Daily Start Time")
         ax1.plot(dates, end_hours, "g.", alpha=0.3, label="Daily End Time")
-        ax1.plot(
-            moving_avg_dates,
-            start_moving_avg,
-            "r-",
-            linewidth=2,
-            label=f"{window_size}-Day Moving Average (Start)",
-        )
-        ax1.plot(
-            moving_avg_dates,
-            end_moving_avg,
-            "m-",
-            linewidth=2,
-            label=f"{window_size}-Day Moving Average (End)",
-        )
+        ax1.plot(moving_avg_dates, start_moving_avg, "r-", linewidth=2, label=f"{window_size}-Day Moving Average (Start)")
+        ax1.plot(moving_avg_dates, end_moving_avg, "m-", linewidth=2, label=f"{window_size}-Day Moving Average (End)")
         ax1.set_ylim(22, 38)
 
         # Create second y-axis for duration
         ax2 = ax1.twinx()
-        # ax2.plot(dates, durations, 'c.', alpha=0.3, label='Daily Duration')
-        ax2.plot(
-            moving_avg_dates,
-            duration_moving_avg,
-            "y-",
-            linewidth=2,
-            label=f"{window_size}-Day Moving Average (Duration)",
-        )
+        ax2.plot(moving_avg_dates, duration_moving_avg, "y-", linewidth=2, label=f"{window_size}-Day Moving Average (Duration)")
         ax2.set_ylim(-2, 14)  # Set y-axis limits for duration from 0 to 16 hours
 
         # Convert days since 1970 to months for x-axis labels
         base_date = datetime(1970, 1, 1)
         month_ticks = []
         month_labels = []
-        current_date = start_datetime
+        current_date = datetime.combine(start_date, datetime.min.time())  # Convert start_date to datetime
         while True:
             days_to_next_month = (current_date - base_date).days
-            if days_to_next_month > dates[-1]:
+            if days_to_next_month > moving_avg_dates[-1]:
                 break
             month_ticks.append(days_to_next_month)
             month_labels.append(current_date.strftime("%b %Y"))
