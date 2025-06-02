@@ -22,18 +22,18 @@ class SleepService(SleepServiceInterface):
         """Calculate the Unix epoch timestamps for the sleep day boundaries.
 
         For a given date, returns:
-        - start_timestamp: previous day 18:00 GMT+8 (10:00 UTC)
-        - end_timestamp: current day 18:00 GMT+8 (10:00 UTC)
+        - start_timestamp: previous day 00:00 UTC + 10 hours
+        - end_timestamp: current day 00:00 UTC + 10 hours
         """
         # Convert date to datetime at 00:00:00
         start_of_day = datetime.combine(date_obj, datetime.min.time())
 
-        # For start_date: previous day 18:00 GMT+8 (10:00 UTC)
+        # For start_date: previous day 00:00 UTC + 10 hours
         start_timestamp = int(
             (start_of_day - timedelta(days=1) + timedelta(hours=10)).timestamp()
         )
 
-        # For end_date: current day 18:00 GMT+8 (10:00 UTC)
+        # For end_date: current day 00:00 UTC + 10 hours
         end_timestamp = int((start_of_day + timedelta(hours=10)).timestamp())
 
         return start_timestamp, end_timestamp
