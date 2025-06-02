@@ -10,6 +10,7 @@ from ..interfaces.configserviceinterface import ConfigServiceInterface
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from ..interfaces.trendserviceinterface import TrendServiceInterface
 from ..interfaces.typeserviceinterface import TypeServiceInterface
+from ..interfaces.sleepserviceinterface import SleepServiceInterface
 from ..services.di import FlaskWithServiceProvider, get_service_provider
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]
@@ -96,5 +97,19 @@ def inject_trendservice(f: Callable[..., R]) -> Callable[..., R]:
         )
         service = service_provider.get(TrendServiceInterface)  # type: ignore
         return f(trend_service=service, *args, **kwargs)
+
+    return wrapper
+
+
+def inject_sleepservice(f: Callable[..., R]) -> Callable[..., R]:
+    """Inject sleep service as named argument"""
+
+    @wraps(f)
+    def wrapper(*args: Any, **kwargs: Any) -> R:
+        service_provider = get_service_provider(
+            cast(FlaskWithServiceProvider, current_app)
+        )
+        service = service_provider.get(SleepServiceInterface)  # type: ignore
+        return f(sleep_service=service, *args, **kwargs)
 
     return wrapper

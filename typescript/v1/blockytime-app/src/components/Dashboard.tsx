@@ -3,6 +3,7 @@ import IconButton from '@mui/material/IconButton';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import { useNavigate } from 'react-router-dom';
 import { TimeSlotCharts } from './TimeSlotCharts';
+import { SleepDataSection } from './SleepDataSection';
 import './Dashboard.css';
 
 export const Dashboard: React.FC = () => {
@@ -21,6 +22,7 @@ export const Dashboard: React.FC = () => {
       
       <div className="dashboard-content">
         <TimeSlotCharts />
+        <SleepDataSection />
         {/* WeeklyGrid will go here */}
       </div>
     </div>

@@ -17,9 +17,10 @@ from .interfaces.configserviceinterface import ConfigServiceInterface
 from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .interfaces.trendserviceinterface import TrendServiceInterface
 from .interfaces.typeserviceinterface import TypeServiceInterface
+from .interfaces.sleepserviceinterface import SleepServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
-from .routes import blocks, configs, stats, trends, types
+from .routes import blocks, configs, stats, trends, types, sleeps
 from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
@@ -27,6 +28,7 @@ from .services.di import FlaskWithServiceProvider, ServiceProvider
 from .services.statisticsservice import StatisticsService
 from .services.trendservice import TrendService
 from .services.typeservice import TypeService
+from .services.sleepservice import SleepService
 
 # Configure logging
 logging.basicConfig(
@@ -141,6 +143,7 @@ def create_app() -> Flask:
     service_provider.register(ConfigServiceInterface, ConfigService(engine))  # type: ignore
     service_provider.register(StatisticsServiceInterface, StatisticsService(engine))  # type: ignore
     service_provider.register(TrendServiceInterface, TrendService(engine))  # type: ignore
+    service_provider.register(SleepServiceInterface, SleepService(engine))  # type: ignore
     service_provider.register(ConfigDict, app.config)
 
     # Define static file routes
@@ -159,6 +162,7 @@ def create_app() -> Flask:
     app.register_blueprint(configs.bp)
     app.register_blueprint(stats.bp)
     app.register_blueprint(trends.bp)
+    app.register_blueprint(sleeps.bp)
     # log.info("Registered company, namecard and auth routes")
 
     # Register routes
