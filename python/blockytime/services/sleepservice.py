@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import cast
+from typing import cast, Callable
 
 import pytz
 from blockytime.models.block import Block
@@ -41,15 +41,18 @@ class SleepService(SleepServiceInterface):
         naive_start_of_day = datetime.combine(date_obj, datetime.min.time())
         
         # Get UTC offset for this date
-        utc_offset = timezone.utcoffset(naive_start_of_day).total_seconds() / 3600
+        utc_offset = timezone.utcoffset(naive_start_of_day)
+        if utc_offset is None:
+            raise ValueError("Timezone offset is None")
+        utc_offset_hours = utc_offset.total_seconds() / 3600
 
         # For start_date: previous day cut_off_hour:00 in local time
         start_timestamp = int(
-            (naive_start_of_day - timedelta(days=1) + timedelta(hours=cut_off_hour - utc_offset)).timestamp()
+            (naive_start_of_day - timedelta(days=1) + timedelta(hours=cut_off_hour - utc_offset_hours)).timestamp()
         )
 
         # For end_date: current day cut_off_hour:00 in local time
-        end_timestamp = int((naive_start_of_day + timedelta(hours=cut_off_hour - utc_offset)).timestamp())
+        end_timestamp = int((naive_start_of_day + timedelta(hours=cut_off_hour - utc_offset_hours)).timestamp())
 
         return start_timestamp, end_timestamp
 
@@ -70,8 +73,11 @@ class SleepService(SleepServiceInterface):
             # Calculate sleep day (18:00 GMT+8 to next day 18:00 GMT+8)
             # 14 * 60 * 60 = 14 hours in seconds (18:00 GMT+8 = 10:00 UTC)
             # 24 * 60 * 60 = 24 hours in seconds
-            utc_offset = int(self.timezone.utcoffset(datetime.now()).total_seconds() / 3600)
-            sleep_day_offset = (24 - 18 + utc_offset) * 3600  # Convert hours to seconds
+            utc_offset = self.timezone.utcoffset(datetime.now())
+            if utc_offset is None:
+                raise ValueError("Timezone offset is None")
+            utc_offset_hours = int(utc_offset.total_seconds() / 3600)
+            sleep_day_offset = (24 - 18 + utc_offset_hours) * 3600  # Convert hours to seconds
             sleep_day = (Block.date - sleep_day_offset) // (24 * 60 * 60)
 
             results = (
@@ -159,7 +165,7 @@ class SleepService(SleepServiceInterface):
         end_hours = np.array([x[2] for x in sime_day_tuple])
         durations = np.array([x[3] for x in sime_day_tuple])
 
-        def ewma(data):
+        def ewma(data: np.ndarray) -> np.ndarray:
             weights = np.array([decay_factor**i for i in range(window_size)][::-1])
             weights = weights / weights.sum()  # Normalize weights to sum to 1
             return np.convolve(data, weights, mode="valid")

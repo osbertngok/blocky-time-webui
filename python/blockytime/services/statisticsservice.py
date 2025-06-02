@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, cast
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, text
@@ -117,7 +117,7 @@ class StatisticsService(StatisticsServiceInterface):
                     results.append(
                         StatisticsDTO(
                             type_=type_dict[row.type_uid],
-                            duration=row.count * 0.25  # Each block is 15 minutes
+                            duration=cast(float, row.count) * 0.25  # Each block is 15 minutes
                         )
                     )
 
