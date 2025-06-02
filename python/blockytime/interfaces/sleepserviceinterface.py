@@ -29,11 +29,17 @@ class SleepServiceInterface(Protocol):
 
     def calculate_sleep_stats(
         self,
-        start_date: datetime,
-        end_date: datetime,
+        start_date: date,
+        end_date: date,
+        cut_off_hour: int,
+        timezone: pytz.BaseTzInfo,
+        start_time_cut_off_hour: int,
+        end_time_cut_off_hour: int,
+        filter_start_time_after: float,
+        filter_end_time_after: float,
         decay_factor: float = 0.1,
         window_size: int = 7,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Calculate sleep statistics with moving averages.
 
         Args:
@@ -49,7 +55,8 @@ class SleepServiceInterface(Protocol):
                 duration_moving_avg,
                 moving_avg_dates,
                 start_hours,
-                end_hours
+                end_hours,
+                dates
             )
         """
         ...
