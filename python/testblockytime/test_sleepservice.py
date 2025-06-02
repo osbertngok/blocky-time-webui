@@ -126,7 +126,10 @@ class TestSleepService:
         # Get blocks from the engine
         tomorrow = date.today() + timedelta(days=1)
         sleep_stats: List[SleepStatsDTO] = SleepService(engine).get_sleep_stats(
-            date(2025, 1, 1), tomorrow
+            date(2025, 1, 1), 
+            tomorrow,
+            cut_off_hour=18,
+            timezone=pytz.timezone("Asia/Shanghai")
         )
         # Plot sleep duration using matplotlib
         import matplotlib.pyplot as plt

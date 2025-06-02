@@ -51,7 +51,13 @@ class SleepService(SleepServiceInterface):
 
         return start_timestamp, end_timestamp
 
-    def get_sleep_stats(self, start_date: date, end_date: date) -> list[SleepStatsDTO]:
+    def get_sleep_stats(
+        self, 
+        start_date: date, 
+        end_date: date,
+        cut_off_hour: int,
+        timezone: pytz.BaseTzInfo
+    ) -> list[SleepStatsDTO]:
         with Session(self.engine) as session:
             # Calculate the Unix epoch timestamps for the boundaries
             start_timestamp, _ = self._get_date_boundaries(start_date, 18, self.timezone)
@@ -60,7 +66,9 @@ class SleepService(SleepServiceInterface):
             # Calculate sleep day (18:00 GMT+8 to next day 18:00 GMT+8)
             # 14 * 60 * 60 = 14 hours in seconds (18:00 GMT+8 = 10:00 UTC)
             # 24 * 60 * 60 = 24 hours in seconds
-            sleep_day = (Block.date - 14 * 60 * 60) // (24 * 60 * 60)
+            utc_offset = int(timezone.utcoffset(datetime.now()).total_seconds() / 3600)
+            sleep_day_offset = (24 - cut_off_hour + utc_offset) * 3600  # Convert hours to seconds
+            sleep_day = (Block.date - sleep_day_offset) // (24 * 60 * 60)
 
             results = (
                 session.query(
