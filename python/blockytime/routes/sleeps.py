@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from flask import Blueprint, jsonify, request
@@ -40,12 +40,17 @@ def get_sleep_stats(sleep_service: SleepServiceInterface) -> RouteReturn:
         window_size=window_size
     )
     
+    # Convert days since epoch to YYYY-MM-DD format
+    epoch = datetime(1970, 1, 1).date()
+    moving_avg_dates = [(epoch + timedelta(days=int(d))).strftime("%Y-%m-%d") for d in stats[3]]
+    dates = [(epoch + timedelta(days=int(d))).strftime("%Y-%m-%d") for d in stats[6]]
+    
     return jsonify({
         "start_moving_avg": stats[0].tolist(),
         "end_moving_avg": stats[1].tolist(),
         "duration_moving_avg": stats[2].tolist(),
-        "moving_avg_dates": [d.strftime("%Y-%m-%d") for d in stats[3]],
+        "moving_avg_dates": moving_avg_dates,
         "start_hours": stats[4].tolist(),
         "end_hours": stats[5].tolist(),
-        "dates": stats[6].tolist()
+        "dates": dates
     }) 

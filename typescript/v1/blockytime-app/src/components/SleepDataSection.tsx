@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { format, subDays } from 'date-fns';
+import { format } from 'date-fns';
+import dayjs from 'dayjs';
 import SleepDataControl from './SleepDataControl';
 import SleepDataChart from './SleepDataChart';
 
@@ -13,8 +14,8 @@ interface SleepData {
 }
 
 export const SleepDataSection: React.FC = () => {
-  const [startDate, setStartDate] = useState<Date>(subDays(new Date(), 30));
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date>(dayjs().startOf('year').toDate());
+  const [endDate, setEndDate] = useState<Date>(dayjs().add(1, 'day').toDate());
   const [sleepData, setSleepData] = useState<SleepData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

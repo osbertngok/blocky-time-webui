@@ -60,7 +60,8 @@
 main {
   flex: 1;
   width: 100%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar-content {

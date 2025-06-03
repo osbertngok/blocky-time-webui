@@ -102,11 +102,34 @@ export const SleepDataChart: React.FC<SleepDataChartProps> = ({
     ],
   };
 
+  // Calculate dynamic min/max for left y axis (start/end times)
+  const leftValues = [
+    ...startHours,
+    ...endHours,
+    ...startMovingAvg,
+    ...endMovingAvg,
+  ];
+  const leftMin = Math.floor(Math.min(...leftValues)) - 1;
+  const leftMax = Math.ceil(Math.max(...leftValues)) + 1;
+
+  // Calculate dynamic min/max for right y axis (duration)
+  const rightValues = durationMovingAvg;
+  const rightMin = Math.floor(Math.min(...rightValues)) - 1;
+  const rightMax = Math.ceil(Math.max(...rightValues)) + 1;
+
   const options: ChartOptions<'scatter'> = {
     responsive: true,
     interaction: {
       mode: 'index',
       intersect: false,
+    },
+    plugins: {
+      tooltip: {
+        enabled: false,
+      },
+      datalabels: {
+        display: false,
+      },
     },
     scales: {
       x: {
@@ -125,8 +148,8 @@ export const SleepDataChart: React.FC<SleepDataChartProps> = ({
           display: true,
           text: 'Hour of Day',
         },
-        min: 0,
-        max: 24,
+        min: leftMin,
+        max: leftMax,
       },
       duration: {
         type: 'linear',
@@ -136,8 +159,8 @@ export const SleepDataChart: React.FC<SleepDataChartProps> = ({
           display: true,
           text: 'Duration (hours)',
         },
-        min: 0,
-        max: 12,
+        min: rightMin,
+        max: rightMax,
         grid: {
           drawOnChartArea: false,
         },
