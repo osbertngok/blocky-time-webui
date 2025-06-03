@@ -148,8 +148,14 @@ export const SleepDataChart: React.FC<SleepDataChartProps> = ({
           display: true,
           text: 'Hour of Day',
         },
-        min: leftMin,
-        max: leftMax,
+        min: 22,
+        max: 38,
+        ticks: {
+          callback: (value) => {
+            const hour = (Number(value) % 24);
+            return `${hour.toString().padStart(2, '0')}:00`;
+          },
+        },
       },
       duration: {
         type: 'linear',
@@ -159,8 +165,8 @@ export const SleepDataChart: React.FC<SleepDataChartProps> = ({
           display: true,
           text: 'Duration (hours)',
         },
-        min: rightMin,
-        max: rightMax,
+        min: -2,
+        max: 14,
         grid: {
           drawOnChartArea: false,
         },
