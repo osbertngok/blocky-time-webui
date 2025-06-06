@@ -19,6 +19,8 @@ export const SleepDataSection: React.FC = () => {
   const [sleepData, setSleepData] = useState<SleepData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [decayFactor, setDecayFactor] = useState<number>(0.75);
+  const [windowSize, setWindowSize] = useState<number>(14);
 
   useEffect(() => {
     const fetchSleepData = async () => {
@@ -26,7 +28,10 @@ export const SleepDataSection: React.FC = () => {
       setError(null);
       try {
         const response = await fetch(
-          `/api/v1/sleep/stats?start_date=${format(startDate, 'yyyy-MM-dd')}&end_date=${format(endDate, 'yyyy-MM-dd')}`
+          `/api/v1/sleep/stats?start_date=${format(startDate, 'yyyy-MM-dd')}` +
+          `&end_date=${format(endDate, 'yyyy-MM-dd')}` +
+          `&decay_factor=${decayFactor}` +
+          `&window_size=${windowSize}`
         );
         if (!response.ok) {
           throw new Error('Failed to fetch sleep data');
@@ -41,7 +46,7 @@ export const SleepDataSection: React.FC = () => {
     };
 
     fetchSleepData();
-  }, [startDate, endDate]);
+  }, [startDate, endDate, decayFactor, windowSize]);
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -51,6 +56,10 @@ export const SleepDataSection: React.FC = () => {
         endDate={endDate}
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
+        decayFactor={decayFactor}
+        windowSize={windowSize}
+        onDecayFactorChange={setDecayFactor}
+        onWindowSizeChange={setWindowSize}
       />
       {loading && <div className="text-center py-4">Loading...</div>}
       {error && <div className="text-red-500 py-4">{error}</div>}

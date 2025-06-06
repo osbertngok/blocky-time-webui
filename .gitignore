@@ -169,3 +169,5 @@ python/blockytime/data/dynamic/
 
 # Mac
 .DS_Store
+
+.vscode
