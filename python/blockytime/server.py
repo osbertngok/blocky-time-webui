@@ -49,13 +49,10 @@ if TYPE_CHECKING:
 
 
 def load_config(app: Flask) -> None:
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
     # Near the top with other environment variables
     BLOCKYTIME_SERVER_PORT = int(os.getenv("BLOCKYTIME_SERVER_PORT", "5001"))
     app.config = ConfigDict(root_path=app.config.root_path, defaults=app.config)
     app.config["BLOCKYTIME_SERVER_PORT"] = BLOCKYTIME_SERVER_PORT
-    app.config["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 
 def define_root_static_files(app: Flask) -> None:
@@ -171,13 +168,6 @@ def create_app() -> Flask:
         """Serve index.html"""
         return send_from_directory("data/static", "index.html")
 
-    @app.route("/api/v1/config")
-    def config() -> FlaskResponse:
-        return jsonify(
-            {
-                "google_api_key": app.config["GOOGLE_API_KEY"],
-            }
-        )
 
     return app
 

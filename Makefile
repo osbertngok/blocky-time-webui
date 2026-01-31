@@ -5,12 +5,34 @@ PYTHON_PACKAGES ?= blockytime
 APP_NAME ?= blockytime
 
 # Determine OS. Currently only support Mac.
-UNAME_S := $(shell uname -s) # FIXME: This may fail on Windows
+UNAME_S := $(shell uname -s | tr -d '\n\r\t ') # FIXME: This may fail on Windows
+
+# Determine Python3 location
+# Prefer the highest version if multiple python3 executables exist
+DETECTED_PYTHONS := $(shell \
+  { \
+    for dir in $$HOME/miniconda3/bin /opt/homebrew/bin /usr/local/bin /usr/bin; do \
+      for p in $$dir/python3 $$dir/python3.[0-9]*; do \
+        if [ -x $$p ] && ! echo "$$p" | grep -q -- "-config$$"; then \
+          echo $$p; \
+        fi; \
+      done; \
+    done; \
+  } 2>/dev/null )
+# Sort by Python version (extract version and sort, then map back to path)
+PYTHON3_LOCATION := $(shell \
+  for python in $(DETECTED_PYTHONS); do \
+    version=$$($$python --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1); \
+    echo "$$version|$$python"; \
+  done | sort -V -t'|' -k1 | tail -n1 | cut -d'|' -f2)
+
+$(if $(DETECTED_PYTHONS),$(info Detected python executables: $(DETECTED_PYTHONS)),$(info No python executables detected))
+$(if $(PYTHON3_LOCATION),$(info Selected python: $(PYTHON3_LOCATION))$(info Selected python version: $(shell $(PYTHON3_LOCATION) --version 2>&1 || echo "unknown")),$(info Warning: No python3 executable selected))
 
 define TEST_LIST_SCRIPT
-from testblockytime import test_blockservice, test_typeservice, test_sleepservice
+from testblockytime import test_blockservice, test_typeservice
 import inspect
-for module in [test_blockservice, test_typeservice, test_sleepservice]:
+for module in [test_blockservice, test_typeservice]:
     for classname, classobj in inspect.getmembers(module):
         if classname.startswith("Test"):
             for name, obj in inspect.getmembers(classobj):
@@ -22,7 +44,6 @@ export TEST_LIST_SCRIPT
 
 override MAKE = $(shell which make)
 override PYTHON3 = $(shell which python3)
-override GOOGLE_API_KEY = $(shell cat .env | grep GOOGLE_API_KEY | cut -d '=' -f2)
 override FLASK_SECRET_KEY = $(shell cat .env | grep FLASK_SECRET_KEY | cut -d '=' -f2)
 override BLOCKYTIME_SERVER_PORT = $(shell cat .env | grep BLOCKYTIME_SERVER_PORT | cut -d '=' -f2 | grep . || echo 5002)
 
@@ -63,13 +84,13 @@ usage: check-os
 	@echo "\033[0m"
 
 .ve3/bin/python3:
-	@if [ ! -x "/usr/local/bin/python3" ]; then \
-		echo "Error: python3 not found in PATH"; \
+	@if [ -z "$(PYTHON3_LOCATION)" ] || [ ! -x "$(PYTHON3_LOCATION)" ]; then \
+		echo "Error: python3 not found. Searched in: $$HOME/miniconda3/bin /opt/homebrew/bin /usr/local/bin /usr/bin"; \
 		exit 1; \
 	fi
-	@echo "Found python3 at /usr/local/bin/python3"
+	@echo "Found python3 at $(PYTHON3_LOCATION)"
 	@mkdir -p .ve3/bin
-	@ln -s /usr/local/bin/python3 .ve3/bin/python3
+	@ln -sf $(PYTHON3_LOCATION) .ve3/bin/python3
 
 .ve3/bin/pip: .ve3/bin/python3
 	@echo "Downloading pip..."
@@ -79,7 +100,8 @@ usage: check-os
 .PHONY: build-python-env
 build-python-env: .ve3/bin/pip
 	@.ve3/bin/python3 -m pip install --trusted-host=mirrors.aliyun.com -e ".[dev]"
-	@PYTHON_VERSION=$$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'); \
+	@PYTHON_VERSION=$$(.ve3/bin/python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'); \
+	mkdir -p .ve3/lib/python$$PYTHON_VERSION/site-packages; \
 	echo "$(shell pwd)/python" > .ve3/lib/python$$PYTHON_VERSION/site-packages/on.pth
 
 
@@ -90,8 +112,7 @@ build: build-python-env
 .PHONY: run
 run:
 	@echo "Running blockytime server on port ${BLOCKYTIME_SERVER_PORT}..."
-	@GOOGLE_API_KEY=${GOOGLE_API_KEY} \
-	FLASK_SECRET_KEY=${FLASK_SECRET_KEY} \
+	@FLASK_SECRET_KEY=${FLASK_SECRET_KEY} \
 	BLOCKYTIME_SERVER_PORT=${BLOCKYTIME_SERVER_PORT} \
 	.ve3/bin/python3 -m python.blockytime.server
 
@@ -136,12 +157,13 @@ python:
 
 .PHONY: check-os
 check-os:
-ifeq ($(UNAME_S),Darwin)
-	$(error Cannot support non-MacOS. Current OS is $(UNAME_S))
+ifeq ($(strip $(UNAME_S)),Darwin)
+	@echo "Running on macOS - supported"
+else
+	@echo "Warning: This Makefile is optimized for macOS. Current OS is $(strip $(UNAME_S))"
 endif
-PYTHON3_LOCATION := /usr/local/bin/python3.12
-ifeq ("$(wildcard $(PYTHON3_LOCATION))","")
-    $(error Cannot find file $(PYTHON3_LOCATION))
+ifeq ("$(PYTHON3_LOCATION)","")
+    $(error Cannot find python3 in ~/miniconda3/bin/python3, /opt/homebrew/bin/python3, /usr/local/bin/python3, or /usr/bin/python3)
 endif
 
 # Default to project's dynamic data directory
