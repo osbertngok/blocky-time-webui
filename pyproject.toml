@@ -31,7 +31,8 @@ dev = [
     "types-pytz",
     "isort",
     "autoflake",
-    "black"
+    "black",
+    "pymobiledevice3"
 ]
 
 [tool.setuptools]
