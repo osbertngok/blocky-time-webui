@@ -3,31 +3,19 @@ override HEAD = $(shell git rev-parse HEAD)
 
 PYTHON_PACKAGES ?= blockytime
 APP_NAME ?= blockytime
+PYTHON_VERSION ?= 3.13
 
 # Determine OS. Currently only support Mac.
 UNAME_S := $(shell uname -s | tr -d '\n\r\t ') # FIXME: This may fail on Windows
 
-# Determine Python3 location
-# Prefer the highest version if multiple python3 executables exist
-DETECTED_PYTHONS := $(shell \
-  { \
-    for dir in $$HOME/miniconda3/bin /opt/homebrew/bin /usr/local/bin /usr/bin; do \
-      for p in $$dir/python3 $$dir/python3.[0-9]*; do \
-        if [ -x $$p ] && ! echo "$$p" | grep -q -- "-config$$"; then \
-          echo $$p; \
-        fi; \
-      done; \
-    done; \
-  } 2>/dev/null )
-# Sort by Python version (extract version and sort, then map back to path)
-PYTHON3_LOCATION := $(shell \
-  for python in $(DETECTED_PYTHONS); do \
-    version=$$($$python --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -1); \
-    echo "$$version|$$python"; \
-  done | sort -V -t'|' -k1 | tail -n1 | cut -d'|' -f2)
+# Detect uv
+UV := $(shell which uv 2>/dev/null)
+ifndef UV
+    $(error uv is not installed. Install it from https://docs.astral.sh/uv/getting-started/installation/)
+endif
 
-$(if $(DETECTED_PYTHONS),$(info Detected python executables: $(DETECTED_PYTHONS)),$(info No python executables detected))
-$(if $(PYTHON3_LOCATION),$(info Selected python: $(PYTHON3_LOCATION))$(info Selected python version: $(shell $(PYTHON3_LOCATION) --version 2>&1 || echo "unknown")),$(info Warning: No python3 executable selected))
+override FLASK_SECRET_KEY = $(shell cat .env 2>/dev/null | grep FLASK_SECRET_KEY | cut -d '=' -f2)
+override BLOCKYTIME_SERVER_PORT = $(shell cat .env 2>/dev/null | grep BLOCKYTIME_SERVER_PORT | cut -d '=' -f2 | grep . || echo 5002)
 
 define TEST_LIST_SCRIPT
 from testblockytime import test_blockservice, test_typeservice
@@ -41,11 +29,6 @@ for module in [test_blockservice, test_typeservice]:
 endef
 export TEST_LIST_SCRIPT
 
-
-override MAKE = $(shell which make)
-override PYTHON3 = $(shell which python3)
-override FLASK_SECRET_KEY = $(shell cat .env | grep FLASK_SECRET_KEY | cut -d '=' -f2)
-override BLOCKYTIME_SERVER_PORT = $(shell cat .env | grep BLOCKYTIME_SERVER_PORT | cut -d '=' -f2 | grep . || echo 5002)
 
 .PHONY: all
 all: usage
@@ -84,22 +67,12 @@ usage: check-os
 	@echo "\033[0m"
 
 .ve3/bin/python3:
-	@if [ -z "$(PYTHON3_LOCATION)" ] || [ ! -x "$(PYTHON3_LOCATION)" ]; then \
-		echo "Error: python3 not found. Searched in: $$HOME/miniconda3/bin /opt/homebrew/bin /usr/local/bin /usr/bin"; \
-		exit 1; \
-	fi
-	@echo "Found python3 at $(PYTHON3_LOCATION)"
-	@mkdir -p .ve3/bin
-	@ln -sf $(PYTHON3_LOCATION) .ve3/bin/python3
-
-.ve3/bin/pip: .ve3/bin/python3
-	@echo "Downloading pip..."
-	@curl -sSf -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py && .ve3/bin/python3 /tmp/get-pip.py --trusted-host mirrors.aliyun.com
-	@echo "Finished downloading pip."
+	@echo "Creating virtual environment with uv (Python $(PYTHON_VERSION))..."
+	@$(UV) venv .ve3 --python $(PYTHON_VERSION)
 
 .PHONY: build-python-env
-build-python-env: .ve3/bin/pip
-	@.ve3/bin/python3 -m pip install --trusted-host=mirrors.aliyun.com -e ".[dev]"
+build-python-env: .ve3/bin/python3
+	@$(UV) pip install -e ".[dev]" --python .ve3/bin/python3
 	@PYTHON_VERSION=$$(.ve3/bin/python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'); \
 	mkdir -p .ve3/lib/python$$PYTHON_VERSION/site-packages; \
 	echo "$(shell pwd)/python" > .ve3/lib/python$$PYTHON_VERSION/site-packages/on.pth
@@ -136,7 +109,7 @@ ifeq (${TESTNAME},)
 	@.ve3/bin/python3 -m pytest -s python/testblockytime/${TESTFILE}
 else
 	@.ve3/bin/python3 -m pytest -s python/testblockytime/${TESTFILE}::${TESTNAME}
-endif	
+endif
 
 .PHONY: check
 check: check-mypy-py3
@@ -161,9 +134,6 @@ ifeq ($(strip $(UNAME_S)),Darwin)
 	@echo "Running on macOS - supported"
 else
 	@echo "Warning: This Makefile is optimized for macOS. Current OS is $(strip $(UNAME_S))"
-endif
-ifeq ("$(PYTHON3_LOCATION)","")
-    $(error Cannot find python3 in ~/miniconda3/bin/python3, /opt/homebrew/bin/python3, /usr/local/bin/python3, or /usr/bin/python3)
 endif
 
 # Default to project's dynamic data directory
