@@ -57,6 +57,9 @@ usage: check-os
 	@echo "    make test"
 	@echo "        \033[90m- try a specific test \033[0m"
 	@echo
+	@echo "    make pull-db"
+	@echo "        \033[90m- pull DB.db from USB-connected iPhone \033[0m"
+	@echo
 	@echo "    make python"
 	@echo "        \033[90m- run python3 repl \033[0m"
 	@echo
@@ -138,6 +141,10 @@ endif
 
 # Default to project's dynamic data directory
 export BLOCKYTIME_DATA_PATH ?= $(PWD)/python/blockytime/data
+
+.PHONY: pull-db
+pull-db:
+	@.ve3/bin/python3 -m python.blockytime.scripts.pull_db
 
 .PHONY: fe-install
 fe-install:
