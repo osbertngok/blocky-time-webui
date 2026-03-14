@@ -4,6 +4,7 @@ import { TypeServiceInterface } from '../services/typeservice';
 import { ConfigServiceInterface } from '../interfaces/configserviceinterface';
 import { StatsServiceInterface } from '../interfaces/statisticsserviceinterface';
 import { TrendServiceInterface } from '../interfaces/trendserviceinterface';
+import { AdminServiceInterface } from '../services/adminservice';
 
 
 interface ServiceContextType {
@@ -12,6 +13,7 @@ interface ServiceContextType {
     configService: ConfigServiceInterface;
     statsService: StatsServiceInterface;
     trendService: TrendServiceInterface;
+    adminService: AdminServiceInterface;
   }
   
   export const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
@@ -54,4 +56,12 @@ interface ServiceContextType {
       throw new Error('useTrendService must be used within a ServiceProvider');
     }
     return context.trendService;
+  };
+
+  export const useAdminService = (): AdminServiceInterface => {
+    const context = useContext(ServiceContext);
+    if (!context) {
+      throw new Error('useAdminService must be used within a ServiceProvider');
+    }
+    return context.adminService;
   };

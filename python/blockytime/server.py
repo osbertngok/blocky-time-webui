@@ -20,7 +20,7 @@ from .interfaces.typeserviceinterface import TypeServiceInterface
 from .interfaces.sleepserviceinterface import SleepServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
-from .routes import blocks, configs, stats, trends, types, sleeps
+from .routes import admin, blocks, configs, stats, trends, types, sleeps
 from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
@@ -160,6 +160,7 @@ def create_app() -> Flask:
     app.register_blueprint(stats.bp)
     app.register_blueprint(trends.bp)
     app.register_blueprint(sleeps.bp)
+    app.register_blueprint(admin.create_admin_blueprint(engine))
     # log.info("Registered company, namecard and auth routes")
 
     # Register routes
