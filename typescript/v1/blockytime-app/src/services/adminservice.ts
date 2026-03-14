@@ -5,8 +5,16 @@ export interface PullDbResult {
   message?: string;
 }
 
+export interface PushDbResult {
+  status: 'success' | 'error';
+  device?: string;
+  size_kb?: number;
+  message?: string;
+}
+
 export interface AdminServiceInterface {
   pullDb(): Promise<PullDbResult>;
+  pushDb(): Promise<PushDbResult>;
 }
 
 export class AdminService implements AdminServiceInterface {
@@ -21,6 +29,14 @@ export class AdminService implements AdminServiceInterface {
       method: 'POST',
     });
     const result = await response.json() as PullDbResult;
+    return result;
+  }
+
+  async pushDb(): Promise<PushDbResult> {
+    const response = await fetch(`${this.apiBaseUrl}/admin/push-db`, {
+      method: 'POST',
+    });
+    const result = await response.json() as PushDbResult;
     return result;
   }
 }

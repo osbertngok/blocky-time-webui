@@ -163,6 +163,8 @@ cython_debug/
 build/
 python/blockytime/data/*.db
 python/blockytime/data/*.db.[0-9]*
+python/blockytime/data/*.db.pre-push
+python/blockytime/data/*.db.pre-push.[0-9]*
 
 
 # Dynamic data directories

@@ -60,6 +60,9 @@ usage: check-os
 	@echo "    make pull-db"
 	@echo "        \033[90m- pull DB.db from USB-connected iPhone \033[0m"
 	@echo
+	@echo "    make push-db"
+	@echo "        \033[90m- push local DB.db to USB-connected iPhone (backs up iPhone DB first) \033[0m"
+	@echo
 	@echo "    make python"
 	@echo "        \033[90m- run python3 repl \033[0m"
 	@echo
@@ -145,6 +148,10 @@ export BLOCKYTIME_DATA_PATH ?= $(PWD)/python/blockytime/data
 .PHONY: pull-db
 pull-db:
 	@.ve3/bin/python3 -m python.blockytime.scripts.pull_db
+
+.PHONY: push-db
+push-db:
+	@.ve3/bin/python3 -m python.blockytime.scripts.push_db
 
 .PHONY: fe-install
 fe-install:
