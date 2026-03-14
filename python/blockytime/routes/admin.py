@@ -1,0 +1,82 @@
+"""Admin routes for device management operations."""
+
+import logging
+import os
+import shutil
+import tempfile
+
+from flask import Blueprint, jsonify
+from sqlalchemy import Engine
+
+from ..routes.decorators import RouteReturn
+
+log = logging.getLogger(__name__)
+
+BUNDLE_ID = "com.anniapp.Timeblocks"
+DB_FILENAME = "DB.db"
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "dynamic")
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, DB_FILENAME)
+
+
+def create_admin_blueprint(engine: Engine) -> Blueprint:
+    bp = Blueprint("admin", __name__)
+
+    @bp.route("/api/v1/admin/pull-db", methods=["POST"])
+    def pull_db() -> RouteReturn:
+        """Pull DB.db from a USB-connected iPhone and reload the database."""
+        try:
+            from pymobiledevice3.lockdown import create_using_usbmux
+            from pymobiledevice3.services.house_arrest import HouseArrestService
+        except ImportError:
+            return jsonify({"status": "error", "message": "pymobiledevice3 is not installed. Run 'make build' first."}), 500
+
+        log.info("pull-db: connecting to USB device...")
+        try:
+            lockdown = create_using_usbmux()
+        except Exception as e:
+            msg = f"Could not connect to device. Is an iPhone connected and trusted? {e}"
+            log.warning(f"pull-db: {msg}")
+            return jsonify({"status": "error", "message": msg}), 503
+
+        device_name = lockdown.display_name
+        ios_version = lockdown.product_version
+        log.info(f"pull-db: connected to {device_name} (iOS {ios_version})")
+
+        try:
+            service = HouseArrestService(lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True)
+        except Exception as e:
+            msg = f"Could not access app container for {BUNDLE_ID}: {e}"
+            log.warning(f"pull-db: {msg}")
+            return jsonify({"status": "error", "message": msg}), 503
+
+        remote_path = f"Documents/{DB_FILENAME}"
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+        tmp_dir = tempfile.mkdtemp(dir=OUTPUT_DIR)
+        tmp_path = os.path.join(tmp_dir, DB_FILENAME)
+        try:
+            service.pull(remote_path, tmp_dir)
+            shutil.move(tmp_path, OUTPUT_PATH)
+        except Exception as e:
+            msg = f"Could not pull {remote_path} from app container: {e}"
+            log.error(f"pull-db: {msg}")
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            return jsonify({"status": "error", "message": msg}), 500
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+        abs_output = os.path.abspath(OUTPUT_PATH)
+        size_kb = os.path.getsize(abs_output) / 1024
+        log.info(f"pull-db: saved {size_kb:.1f} KB to {abs_output}")
+
+        # Dispose connection pool so next query reads the fresh DB file
+        engine.dispose()
+        log.info("pull-db: connection pool disposed, fresh connections will use new DB")
+
+        return jsonify({
+            "status": "success",
+            "device": f"{device_name} (iOS {ios_version})",
+            "size_kb": round(size_kb, 1),
+        })
+
+    return bp

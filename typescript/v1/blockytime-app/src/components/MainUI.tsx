@@ -8,6 +8,7 @@ import './MainUI.css';
 import { DebugPanel } from './DebugPanel';
 import { useBlockService } from '../contexts/ServiceHooks';
 import { useConfigService } from '../contexts/ServiceHooks';
+import { useAdminService } from '../contexts/ServiceHooks';
 import { BlockyTimeConfig } from '../models/blockytimeconfig';
 import { BlockModel } from '../models/block';
 
@@ -30,6 +31,8 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   const timeTableRef = useRef<{ setCurrentDate: (date: Date) => void }>(null);
   const weekViewRef = useRef<{ goToCurrentWeek: () => void }>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullStatus, setPullStatus] = useState<string | null>(null);
   const [config, setConfig] = useState<BlockyTimeConfig>({
     mainTimePrecision: "QUARTER_HOUR",
     disablePixelate: false,
@@ -44,6 +47,7 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   const { selectedBlocks } = useAppSelector(state => state.selection);
   const blockService = useBlockService();
   const configService = useConfigService();
+  const adminService = useAdminService();
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -196,6 +200,25 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
     scrollToCurrentTime
   }));
 
+  const handlePullDb = async () => {
+    setIsPulling(true);
+    setPullStatus(null);
+    try {
+      const result = await adminService.pullDb();
+      if (result.status === 'success') {
+        setPullStatus(`Synced ${result.size_kb} KB from ${result.device}`);
+        dispatch(triggerRefresh());
+      } else {
+        setPullStatus(`Error: ${result.message}`);
+      }
+    } catch {
+      setPullStatus('Error: request failed');
+    } finally {
+      setIsPulling(false);
+      setTimeout(() => setPullStatus(null), 5000);
+    }
+  };
+
   const handleSwitchToWeek = () => {
     setViewMode('week');
   };
@@ -219,6 +242,16 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
         >
           Scroll View
         </button>
+        <div className="sync-controls">
+          {pullStatus && <span className="sync-status">{pullStatus}</span>}
+          <button
+            className="sync-btn"
+            onClick={handlePullDb}
+            disabled={isPulling}
+          >
+            {isPulling ? 'Syncing...' : 'Sync from iPhone'}
+          </button>
+        </div>
       </div>
 
       <div className="main-ui-content">

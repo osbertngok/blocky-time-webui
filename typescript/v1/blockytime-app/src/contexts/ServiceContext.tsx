@@ -4,6 +4,7 @@ import { TypeService } from '../services/typeservice';
 import { ConfigService } from '../services/configservice';
 import { StatsService } from '../services/statisticsservice';
 import { TrendService } from '../services/trendservice';
+import { AdminService } from '../services/adminservice';
 import { ServiceContext } from './ServiceHooks';
 
 export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -12,8 +13,9 @@ export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const configService = new ConfigService()
   const statsService = new StatsService()
   const trendService = new TrendService()
+  const adminService = new AdminService()
   return (
-    <ServiceContext.Provider value={{ blockService, typeService, configService, statsService, trendService }}>
+    <ServiceContext.Provider value={{ blockService, typeService, configService, statsService, trendService, adminService }}>
       {children}
     </ServiceContext.Provider>
   );
