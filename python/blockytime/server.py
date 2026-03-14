@@ -92,17 +92,17 @@ def define_swagger(app: Flask) -> None:
 
     # Configure Swagger
     app.config["SWAGGER"] = {
-        "title": "FTCRM API",
+        "title": "BlockyTime API",
         "uiversion": 3,
         "version": "1.0.0",
         "description": """
-        API for managing business cards and company information from Russian trade expositions.
+        API for viewing and editing BlockyTime time-tracking data.
 
         This API provides endpoints for:
-        * OCR processing of business cards
-        * Company information management
-        * Due diligence requests
-        * Tag management
+        * Reading and writing 15-minute time blocks
+        * Aggregated statistics and trends
+        * Sleep analysis
+        * App configuration
         """,
         "termsOfService": "",
         "contact": {"name": "API Support", "email": "support@example.com"},
@@ -149,9 +149,6 @@ def create_app() -> Flask:
     # Set secret key for sessions
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")
 
-    # Apply auth middleware to all routes
-    # app.before_request(require_auth)
-
     # Register blueprints
     app.register_blueprint(blocks.bp)
     app.register_blueprint(types.bp)
@@ -160,7 +157,6 @@ def create_app() -> Flask:
     app.register_blueprint(trends.bp)
     app.register_blueprint(sleeps.bp)
     app.register_blueprint(admin.create_admin_blueprint(engine))
-    # log.info("Registered company, namecard and auth routes")
 
     # Register routes
     @app.route("/")

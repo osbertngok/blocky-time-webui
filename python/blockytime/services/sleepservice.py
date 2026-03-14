@@ -16,7 +16,7 @@ from ..interfaces.sleepserviceinterface import SleepServiceInterface
 class SleepService(SleepServiceInterface):
     def __init__(self, engine: Engine):
         self.engine = engine
-        self.timezone = pytz.timezone("Asia/Shanghai")
+        self.timezone = pytz.timezone("Asia/Hong_Kong")
 
     def _get_date_boundaries(
         self, date_obj: date, cut_off_hour: int, timezone: pytz.BaseTzInfo
@@ -122,7 +122,7 @@ class SleepService(SleepServiceInterface):
         start_date: date,
         end_date: date,
         cut_off_hour: int = 18,
-        timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Shanghai"),
+        timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Hong_Kong"),
         start_time_cut_off_hour: int = 8,
         end_time_cut_off_hour: int = 14,
         filter_start_time_after: float = 20.0,  # 8 PM
