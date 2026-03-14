@@ -35,9 +35,13 @@ export class BlockService implements BlockServiceInterface {
 
   async getBlocks(startDate: Date, endDate: Date): Promise<BlockModel[]> {
     try {
-      const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const endDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      
+      // Use local date components (not toISOString/UTC) so the date string
+      // matches the server's local-timezone interpretation (Asia/Singapore).
+      const localDateStr = (d: Date): string =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const startDateStr = localDateStr(startDate);
+      const endDateStr = localDateStr(endDate);
+
       return this.getBlocksByDateString(startDateStr, endDateStr);
     } catch (error) {
       console.error('Error fetching blocks:', error);
