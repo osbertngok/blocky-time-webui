@@ -8,6 +8,7 @@ import tempfile
 from flask import Blueprint, jsonify
 from sqlalchemy import Engine
 
+from ..backup import cleanup_overflow, rotate_backups
 from ..routes.decorators import RouteReturn
 
 log = logging.getLogger(__name__)
@@ -52,6 +53,10 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         remote_path = f"Documents/{DB_FILENAME}"
         os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+        # Rotate backups before overwriting
+        log.info("pull-db: rotating backups...")
+        rotate_backups(OUTPUT_PATH)
+
         tmp_dir = tempfile.mkdtemp(dir=OUTPUT_DIR)
         tmp_path = os.path.join(tmp_dir, DB_FILENAME)
         try:
@@ -64,6 +69,9 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
             return jsonify({"status": "error", "message": msg}), 500
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+        cleanup_overflow(OUTPUT_PATH)
+        log.info("pull-db: backup rotation complete")
 
         abs_output = os.path.abspath(OUTPUT_PATH)
         size_kb = os.path.getsize(abs_output) / 1024

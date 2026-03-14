@@ -5,6 +5,8 @@ import shutil
 import sys
 import tempfile
 
+from python.blockytime.backup import cleanup_overflow, rotate_backups
+
 BUNDLE_ID = "com.anniapp.Timeblocks"
 DB_FILENAME = "DB.db"
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "dynamic")
@@ -40,6 +42,10 @@ def main() -> None:
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+    # Rotate backups before overwriting
+    print("Rotating backups...")
+    rotate_backups(OUTPUT_PATH)
+
     # Pull to a temp file first, then move atomically
     tmp_dir = tempfile.mkdtemp(dir=OUTPUT_DIR)
     tmp_path = os.path.join(tmp_dir, DB_FILENAME)
@@ -52,6 +58,8 @@ def main() -> None:
         sys.exit(1)
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    cleanup_overflow(OUTPUT_PATH)
 
     abs_output = os.path.abspath(OUTPUT_PATH)
     size_kb = os.path.getsize(abs_output) / 1024

@@ -162,6 +162,7 @@ cython_debug/
 .ve3/
 build/
 python/blockytime/data/*.db
+python/blockytime/data/*.db.[0-9]*
 
 
 # Dynamic data directories
