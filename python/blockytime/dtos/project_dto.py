@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from .base_dto import BaseDTO
 
@@ -16,7 +16,7 @@ class ProjectDTO(BaseDTO):
     taglist: str = ""
     priority: Optional[int] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "uid": self.uid,
             "name": self.name,

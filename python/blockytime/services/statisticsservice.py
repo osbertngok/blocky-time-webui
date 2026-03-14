@@ -6,6 +6,7 @@ from sqlalchemy import func, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
+from ..constants import DEFAULT_TZ
 from ..dtos.statistics_dto import StatisticsDTO
 from ..dtos.type_dto import TypeDTO
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
@@ -14,8 +15,8 @@ from ..models.type_ import Type
 from ..utils import timeit
 
 # Server timezone configuration
-SERVER_TZ = ZoneInfo("Asia/Hong_Kong")
-SERVER_TZ_OFFSET = 8 * 3600  # 8 hours in seconds
+SERVER_TZ = ZoneInfo(DEFAULT_TZ)
+SERVER_TZ_OFFSET = 8 * 3600  # 8 hours in seconds (Asia/Hong_Kong does not observe DST)
 
 
 class StatisticsService(StatisticsServiceInterface):

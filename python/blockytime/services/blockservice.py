@@ -29,7 +29,7 @@ class BlockService(BlockServiceInterface):
         cache_key = self.get_cache_key(start_date, end_date)
         if cache_key in self._cache:
             blocks, timestamp = self._cache[cache_key]
-            if timestamp > datetime.now():
+            if timestamp >= datetime.now():
                 return blocks
 
         with Session(self.engine) as session:

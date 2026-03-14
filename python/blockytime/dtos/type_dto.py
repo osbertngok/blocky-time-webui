@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from .base_dto import BaseDTO
 from .category_dto import CategoryDTO
@@ -16,7 +16,7 @@ class TypeDTO(BaseDTO):
     priority: Optional[int] = None
     projects: Optional[List[ProjectDTO]] = None
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "uid": self.uid,
             "category": self.category.to_dict() if self.category else None,

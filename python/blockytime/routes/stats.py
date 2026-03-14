@@ -1,16 +1,17 @@
-import gzip
-import json
 import logging
 import time
-from datetime import datetime
 from typing import List
 
-import pytz
-from flask import Blueprint, jsonify, make_response, request
+from flask import Blueprint, jsonify, request
 
 from ..dtos.statistics_dto import StatisticsDTO
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
-from ..routes.decorators import RouteReturn, inject_statisticsservice
+from ..routes.decorators import (
+    RouteReturn,
+    inject_statisticsservice,
+    make_gzip_json_response,
+    parse_date_range_params,
+)
 
 log = logging.getLogger(__name__)
 
@@ -23,25 +24,11 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
     """
     params: start_date, end_date (YYYY-MM-DD)
     """
-    # time this function
     starting_time = time.monotonic()
-    # start_date and end_date are strs in YYYY-MM-DD format
     try:
-        start_date_str: str | None = request.args.get("start_date")
-        if start_date_str is None:
-            return jsonify({"error": "start_date is required"}), 400
-
-        end_date_str: str | None = request.args.get("end_date")
-        if end_date_str is None:
-            return jsonify({"error": "end_date is required"}), 400
-
-        # Parse dates and localize to GMT+8
-        tz = pytz.timezone("Asia/Hong_Kong")
-        start_date = tz.localize(datetime.strptime(start_date_str, "%Y-%m-%d"))
-        end_date = tz.localize(datetime.strptime(end_date_str, "%Y-%m-%d"))
-
-    except ValueError:
-        return jsonify({"error": "Invalid date format"}), 400
+        start_date, end_date = parse_date_range_params()
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
     try:
         type_uids = request.args.getlist("type_uid", type=int)
@@ -59,23 +46,9 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
             minute,
             day_of_week,
         )
-        ret = {"data": [stat.to_dict() for stat in stats], "error": None}
-        gzip_supported = "gzip" in request.headers.get("Accept-Encoding", "").lower()
-        if gzip_supported:
-            content = gzip.compress(json.dumps(ret).encode("utf-8"), 5)
-        else:
-            content = json.dumps(ret).encode("utf-8")
-        response = make_response(content)
-        response.headers["Content-Type"] = "application/json"
-        response.headers["Content-Length"] = str(len(content))
-        if gzip_supported:
-            response.headers["Content-Encoding"] = "gzip"
-        return response, 200
+        return make_gzip_json_response([stat.to_dict() for stat in stats])
     except Exception as e:
-        import traceback
-
-        traceback.print_exc()
+        log.error("get_stats failed", exc_info=True)
         return jsonify({"data": None, "error": str(e)}), 500
     finally:
-        ending_time = time.monotonic()
-        log.info(f"get_stats took {ending_time - starting_time} seconds")
+        log.info(f"get_stats took {time.monotonic() - starting_time} seconds")
