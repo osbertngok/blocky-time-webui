@@ -22,8 +22,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import pytz
-from sqlalchemy import create_engine
-
 from blockytime.dtos.block_dto import BlockDTO
 from blockytime.dtos.project_dto import ProjectDTO
 from blockytime.dtos.type_dto import TypeDTO
@@ -31,6 +29,7 @@ from blockytime.paths import DB_PATH
 from blockytime.services.blockservice import BlockService
 from blockytime.services.projectservice import ProjectService
 from blockytime.services.typeservice import TypeService
+from sqlalchemy import create_engine
 
 DEFAULT_TIMEZONE = "Asia/Hong_Kong"
 

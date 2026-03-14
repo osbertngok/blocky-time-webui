@@ -12,7 +12,6 @@ class TrendGroupBy(Enum):
 
 
 class TrendServiceInterface(Protocol):
-
     def get_trends(
         self, start_date: date, end_date: date, group_by: TrendGroupBy
     ) -> List[TrendDataDTO]: ...

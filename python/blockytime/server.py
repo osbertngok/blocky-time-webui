@@ -4,9 +4,8 @@ import sys
 from typing import TYPE_CHECKING
 
 from flasgger import Swagger
-from flask import Flask
+from flask import Flask, jsonify, request, send_from_directory
 from flask import Response as FlaskResponse
-from flask import jsonify, request, send_from_directory
 from flask_cors import CORS
 from sqlalchemy import Engine, create_engine, text
 from sqlalchemy.exc import OperationalError
@@ -98,7 +97,7 @@ def define_swagger(app: Flask) -> None:
         "version": "1.0.0",
         "description": """
         API for managing business cards and company information from Russian trade expositions.
-        
+
         This API provides endpoints for:
         * OCR processing of business cards
         * Company information management
@@ -214,9 +213,6 @@ def init_database(db_path: str, data_path: str) -> Engine:
             raise
         raise RuntimeError(f"Database initialization failed: {e}") from e
 
-
-# And only create the app in __main__.py:
-from .server import create_app
 
 if __name__ == "__main__":
     app = create_app()  # Create app once

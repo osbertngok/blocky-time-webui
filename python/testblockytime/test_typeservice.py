@@ -14,7 +14,6 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
 
 class TestTypeService:
-
     @fixture
     def engine(self) -> Engine:
         # Load from data/test_db.db

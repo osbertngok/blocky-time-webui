@@ -110,7 +110,6 @@ def get_trend_data(
 
 
 class TrendService(TrendServiceInterface):
-
     def __init__(self, engine: Engine):
         self._engine = engine
 
@@ -129,7 +128,6 @@ class TrendService(TrendServiceInterface):
         end_ts = get_local_midnight_timestamp(end_date)
 
         with Session(self._engine) as session:
-
             time_format_str = {
                 TrendGroupBy.DAY: "%Y-%m-%d",
                 TrendGroupBy.WEEK: "%Y-%W-1",

@@ -15,7 +15,6 @@ log = logging.getLogger(__name__)
 
 
 class BlockService(BlockServiceInterface):
-
     _cache: Dict[str, Tuple[List[BlockDTO], datetime]] = {}
 
     def __init__(self, engine: Engine):
@@ -81,9 +80,9 @@ class BlockService(BlockServiceInterface):
                             type_ = (
                                 session.query(Type).filter(Type.uid == type_uid).first()
                             )
-                            assert (
-                                type_ is not None
-                            ), f"Cannot find type with uid {type_uid}"
+                            assert type_ is not None, (
+                                f"Cannot find type with uid {type_uid}"
+                            )
                             project = (
                                 session.query(Project)
                                 .filter(Project.uid == project_uid)
