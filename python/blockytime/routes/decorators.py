@@ -7,10 +7,10 @@ from flask import current_app
 
 from ..interfaces.blockserviceinterface import BlockServiceInterface
 from ..interfaces.configserviceinterface import ConfigServiceInterface
+from ..interfaces.sleepserviceinterface import SleepServiceInterface
 from ..interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from ..interfaces.trendserviceinterface import TrendServiceInterface
 from ..interfaces.typeserviceinterface import TypeServiceInterface
-from ..interfaces.sleepserviceinterface import SleepServiceInterface
 from ..services.di import FlaskWithServiceProvider, get_service_provider
 
 RouteReturn = Union[FlaskResponse, Tuple[FlaskResponse, int]]

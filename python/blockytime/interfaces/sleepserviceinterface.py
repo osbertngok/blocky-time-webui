@@ -1,21 +1,20 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Protocol
-import numpy as np
 
-from blockytime.dtos.sleep_dto import SleepStatsDTO
+import numpy as np
 import pytz
+from blockytime.dtos.sleep_dto import SleepStatsDTO
 
 
 class SleepServiceInterface(Protocol):
 
     def get_sleep_stats(
-        self, 
-        start_date: date, 
+        self,
+        start_date: date,
         end_date: date,
         cut_off_hour: int,
-        timezone: pytz.BaseTzInfo
-    ) -> list[SleepStatsDTO]:
-        ...
+        timezone: pytz.BaseTzInfo,
+    ) -> list[SleepStatsDTO]: ...
 
     def calculate_sleep_stats(
         self,
@@ -29,7 +28,15 @@ class SleepServiceInterface(Protocol):
         filter_end_time_after: float,
         decay_factor: float = 0.75,
         window_size: int = 14,
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+        np.ndarray,
+    ]:
         """Calculate sleep statistics with moving averages.
 
         Args:

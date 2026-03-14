@@ -65,7 +65,7 @@ class BlockService(BlockServiceInterface):
                         if block.operation == "upsert":
                             assert block.type_ is not None
                         if block.operation in ["delete", "upsert"]:
-                            result: CursorResult = session.execute(
+                            result: CursorResult = session.execute(  # type: ignore[assignment]
                                 delete(Block).where(Block.date == block.date)
                             )
                             log.info(
@@ -114,5 +114,27 @@ class BlockService(BlockServiceInterface):
             traceback.print_exc()
             log.error(e)
             return False
+        finally:
+            self._cache.clear()
+
+    def delete_blocks(self, start_date: datetime, end_date: datetime) -> int:
+        start_ts = int(start_date.timestamp())
+        end_ts = int(end_date.timestamp())
+        try:
+            with Session(self.engine) as session:
+                result: CursorResult = session.execute(  # type: ignore[assignment]
+                    delete(Block).where(Block.date >= start_ts, Block.date < end_ts)
+                )
+                session.commit()
+                log.info(
+                    f"Deleted {result.rowcount} blocks in range [{start_ts}, {end_ts})"
+                )
+                return result.rowcount
+        except Exception as e:
+            import traceback
+
+            traceback.print_exc()
+            log.error(e)
+            return 0
         finally:
             self._cache.clear()

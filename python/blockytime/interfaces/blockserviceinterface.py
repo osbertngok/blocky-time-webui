@@ -18,3 +18,10 @@ class BlockServiceInterface(Protocol):
         Update blocks
         """
         ...
+
+    def delete_blocks(self, start_date: datetime, end_date: datetime) -> int:
+        """
+        Delete all blocks whose timestamp falls in [start_date, end_date).
+        Returns the number of deleted rows.
+        """
+        ...

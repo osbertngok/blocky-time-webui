@@ -12,9 +12,9 @@ class StatisticsServiceInterface(Protocol):
         end_date: date,
         type_uids: Optional[List[int]] = None,
         time_slot_minutes: int = 30,  # Support 15 or 30 minutes
-        hour: Optional[int] = None,   # 0-23
+        hour: Optional[int] = None,  # 0-23
         minute: Optional[int] = None,  # 0-59, must be multiple of time_slot_minutes
-        day_of_week: Optional[int] = None
+        day_of_week: Optional[int] = None,
     ) -> List[StatisticsDTO]:
         """
         Get statistics for a date range, optionally filtered by type and time slot.
@@ -30,7 +30,7 @@ class StatisticsServiceInterface(Protocol):
 
         Returns:
             List of StatisticsDTO with duration and type information
-        
+
         Raises:
             ValueError: If time_slot_minutes is not 15 or 30, or if minute is not a multiple
                       of time_slot_minutes

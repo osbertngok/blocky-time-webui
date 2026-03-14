@@ -24,6 +24,7 @@ def get_local_midnight_timestamp(d: date, tz: ZoneInfo = SERVER_TZ) -> int:
     """
     return int(datetime.combine(d, datetime.min.time()).replace(tzinfo=tz).timestamp())
 
+
 @timeit
 def get_trend_data(
     session: Session,
@@ -76,21 +77,15 @@ def get_trend_data(
         session.query(
             Block.type_uid.label("type_uid"),
             func.strftime(
-                    time_format_str,
-                    func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
-                ).label("time_label"),
+                time_format_str,
+                func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch"),
+            ).label("time_label"),
             func.coalesce((func.count(Block.uid) * 0.25), literal(0.0)).label(
                 "duration"
             ),
         )
-        .group_by(
-            Block.type_uid,
-            "time_label"
-        )
-        .order_by(
-            Block.type_uid,
-            "time_label"
-        )
+        .group_by(Block.type_uid, "time_label")
+        .order_by(Block.type_uid, "time_label")
         .subquery()
     )
     # Finally, left join with actual block counts
@@ -104,10 +99,7 @@ def get_trend_data(
         )
         .outerjoin(
             blocks,
-            and_(
-                blocks.c.type_uid == base.c.uid,
-                blocks.c.time_label == base.c.time
-            )
+            and_(blocks.c.type_uid == base.c.uid, blocks.c.time_label == base.c.time),
         )
         .group_by(base.c.uid, base.c.time)
         .order_by(base.c.uid, base.c.time)
@@ -151,9 +143,18 @@ class TrendService(TrendServiceInterface):
             # Process results into TrendData format
             trends_by_type: Dict[int, List[TrendDataPoint]] = {}
             type_dict: Dict[int, TypeDTO] = {
-                t.uid: TypeDTO(uid=t.uid, name=t.name, color=t.color, hidden=t.hidden, priority=t.priority, projects=[])
-                for t in session.query(Type.uid, Type.name, Type.color, Type.hidden, Type.priority).all()
-            } # Just to ensure no projects is loaded. We dont' need that here.
+                t.uid: TypeDTO(
+                    uid=t.uid,
+                    name=t.name,
+                    color=t.color,
+                    hidden=t.hidden,
+                    priority=t.priority,
+                    projects=[],
+                )
+                for t in session.query(
+                    Type.uid, Type.name, Type.color, Type.hidden, Type.priority
+                ).all()
+            }  # Just to ensure no projects is loaded. We dont' need that here.
             for r in results:
                 if r.type_uid not in trends_by_type:
                     trends_by_type[r.type_uid] = []

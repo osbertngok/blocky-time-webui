@@ -22,13 +22,15 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import pytz
-from sqlalchemy import create_engine, delete
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
 
-from python.blockytime.models.block import Block
-from python.blockytime.models.project import Project
-from python.blockytime.models.type_ import Type
-from python.blockytime.paths import DB_PATH
+from blockytime.dtos.block_dto import BlockDTO
+from blockytime.dtos.project_dto import ProjectDTO
+from blockytime.dtos.type_dto import TypeDTO
+from blockytime.paths import DB_PATH
+from blockytime.services.blockservice import BlockService
+from blockytime.services.projectservice import ProjectService
+from blockytime.services.typeservice import TypeService
 
 DEFAULT_TIMEZONE = "Asia/Hong_Kong"
 
@@ -62,7 +64,11 @@ COMMANDS_DESCRIPTION = [
         ),
         "args": [
             {"name": "--start-date", "format": "YYYY-MM-DD", "required": True},
-            {"name": "--end-date", "format": "YYYY-MM-DD (exclusive)", "required": True},
+            {
+                "name": "--end-date",
+                "format": "YYYY-MM-DD (exclusive)",
+                "required": True,
+            },
             {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False},
         ],
     },
@@ -71,14 +77,22 @@ COMMANDS_DESCRIPTION = [
         "description": (
             "Upsert (create or overwrite) blocks. "
             "Supply a JSON array via --data or pipe to stdin. "
-            "Each item: {\"date\": \"YYYY-MM-DDTHH:MM\" or unix_ts, "
-            "\"type_uid\": int, \"project_uid\": int|null, \"comment\": str}"
+            'Each item: {"date": "YYYY-MM-DDTHH:MM" or unix_ts, '
+            '"type_uid": int, "project_uid": int|null, "comment": str}'
         ),
         "args": [
-            {"name": "--data", "format": "JSON string", "required": False,
-             "note": "If omitted, JSON is read from stdin"},
-            {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False,
-             "note": "Used when date is a naive ISO string without tz offset"},
+            {
+                "name": "--data",
+                "format": "JSON string",
+                "required": False,
+                "note": "If omitted, JSON is read from stdin",
+            },
+            {
+                "name": "--timezone",
+                "default": DEFAULT_TIMEZONE,
+                "required": False,
+                "note": "Used when date is a naive ISO string without tz offset",
+            },
         ],
     },
     {
@@ -86,7 +100,11 @@ COMMANDS_DESCRIPTION = [
         "description": "Delete all blocks whose timestamp falls in [start_date, end_date).",
         "args": [
             {"name": "--start-date", "format": "YYYY-MM-DD", "required": True},
-            {"name": "--end-date", "format": "YYYY-MM-DD (exclusive)", "required": True},
+            {
+                "name": "--end-date",
+                "format": "YYYY-MM-DD (exclusive)",
+                "required": True,
+            },
             {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False},
         ],
     },
@@ -99,7 +117,11 @@ COMMANDS_DESCRIPTION = [
         ),
         "args": [
             {"name": "--start-date", "format": "YYYY-MM-DD", "required": True},
-            {"name": "--end-date", "format": "YYYY-MM-DD (exclusive)", "required": True},
+            {
+                "name": "--end-date",
+                "format": "YYYY-MM-DD (exclusive)",
+                "required": True,
+            },
             {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False},
         ],
     },
@@ -112,9 +134,17 @@ COMMANDS_DESCRIPTION = [
         ),
         "args": [
             {"name": "--start-date", "format": "YYYY-MM-DD", "required": True},
-            {"name": "--end-date", "format": "YYYY-MM-DD (exclusive)", "required": True},
-            {"name": "--type-uid", "format": "int", "required": False,
-             "note": "If given, only days with a block of this type are returned"},
+            {
+                "name": "--end-date",
+                "format": "YYYY-MM-DD (exclusive)",
+                "required": True,
+            },
+            {
+                "name": "--type-uid",
+                "format": "int",
+                "required": False,
+                "note": "If given, only days with a block of this type are returned",
+            },
             {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False},
         ],
     },
@@ -127,9 +157,17 @@ COMMANDS_DESCRIPTION = [
         ),
         "args": [
             {"name": "--start-date", "format": "YYYY-MM-DD", "required": True},
-            {"name": "--end-date", "format": "YYYY-MM-DD (exclusive)", "required": True},
-            {"name": "--type-uids", "format": "int [int ...]", "required": False,
-             "note": "If given, only include these type UIDs"},
+            {
+                "name": "--end-date",
+                "format": "YYYY-MM-DD (exclusive)",
+                "required": True,
+            },
+            {
+                "name": "--type-uids",
+                "format": "int [int ...]",
+                "required": False,
+                "note": "If given, only include these type UIDs",
+            },
             {"name": "--timezone", "default": DEFAULT_TIMEZONE, "required": False},
         ],
     },
@@ -143,7 +181,8 @@ def get_engine() -> Any:
 def parse_date(date_str: str, tz: Any) -> datetime:
     """Parse YYYY-MM-DD to timezone-aware datetime at midnight."""
     dt = datetime.strptime(date_str, "%Y-%m-%d")
-    return tz.localize(dt)
+    localized: datetime = tz.localize(dt)
+    return localized
 
 
 def parse_block_date(value: Any, tz: Any) -> int:
@@ -160,41 +199,28 @@ def parse_block_date(value: Any, tz: Any) -> int:
 # Command implementations
 # ---------------------------------------------------------------------------
 
+
 def cmd_list_commands(_args: argparse.Namespace) -> None:
     print(json.dumps(COMMANDS_DESCRIPTION, indent=2))
 
 
 def cmd_get_types(_args: argparse.Namespace) -> None:
-    engine = get_engine()
-    with Session(engine) as session:
-        types = session.query(Type).order_by(Type.priority).all()
-        result = [t.to_dto().to_dict() for t in types]
-    print(json.dumps(result, indent=2))
+    service = TypeService(get_engine())
+    print(json.dumps([t.to_dict() for t in service.get_types()], indent=2))
 
 
 def cmd_get_projects(_args: argparse.Namespace) -> None:
-    engine = get_engine()
-    with Session(engine) as session:
-        projects = session.query(Project).order_by(Project.priority).all()
-        result = [p.to_dto().to_dict() for p in projects]
-    print(json.dumps(result, indent=2))
+    service = ProjectService(get_engine())
+    print(json.dumps([p.to_dict() for p in service.get_projects()], indent=2))
 
 
 def cmd_get_blocks(args: argparse.Namespace) -> None:
     tz = pytz.timezone(args.timezone)
-    start_ts = int(parse_date(args.start_date, tz).timestamp())
-    end_ts = int(parse_date(args.end_date, tz).timestamp())
-
-    engine = get_engine()
-    with Session(engine) as session:
-        blocks = (
-            session.query(Block)
-            .filter(Block.date >= start_ts, Block.date < end_ts)
-            .order_by(Block.date)
-            .all()
-        )
-        result = [b.to_dto().to_dict() for b in blocks]
-    print(json.dumps(result, indent=2))
+    start = parse_date(args.start_date, tz)
+    end = parse_date(args.end_date, tz)
+    service = BlockService(get_engine())
+    blocks = service.get_blocks(start, end)
+    print(json.dumps([b.to_dict() for b in blocks], indent=2))
 
 
 def cmd_set_blocks(args: argparse.Namespace) -> None:
@@ -204,147 +230,113 @@ def cmd_set_blocks(args: argparse.Namespace) -> None:
         data = json.load(sys.stdin)
 
     tz = pytz.timezone(args.timezone)
-    engine = get_engine()
 
-    with Session(engine) as session:
-        for item in data:
-            date_ts = parse_block_date(item["date"], tz)
-
-            # Delete any existing block at this timestamp
-            session.execute(delete(Block).where(Block.date == date_ts))
-
-            type_uid: int = int(item["type_uid"])
-            type_ = session.query(Type).filter(Type.uid == type_uid).first()
-            if type_ is None:
-                print(
-                    json.dumps({"error": f"Type with uid={type_uid} not found"}),
-                    file=sys.stderr,
-                )
-                sys.exit(1)
-
-            project_uid: Optional[int] = item.get("project_uid") or None
-            project = (
-                session.query(Project).filter(Project.uid == project_uid).first()
-                if project_uid is not None
-                else None
-            )
-
-            block = Block(
+    block_dtos: List[BlockDTO] = []
+    for item in data:
+        date_ts = parse_block_date(item["date"], tz)
+        type_uid: int = int(item["type_uid"])
+        project_uid: Optional[int] = item.get("project_uid") or None
+        block_dtos.append(
+            BlockDTO(
                 date=date_ts,
-                type_uid=type_uid,
-                type_=type_,
-                project_uid=project_uid,
-                project=project,
+                type_=TypeDTO(uid=type_uid),
+                project=(
+                    ProjectDTO(uid=project_uid) if project_uid is not None else None
+                ),
                 comment=item.get("comment", ""),
+                operation="upsert",
             )
-            session.add(block)
+        )
 
-        session.commit()
-
-    print(json.dumps({"status": "ok", "upserted": len(data)}))
+    service = BlockService(get_engine())
+    if service.update_blocks(block_dtos):
+        print(json.dumps({"status": "ok", "upserted": len(block_dtos)}))
+    else:
+        print(
+            json.dumps({"status": "error", "message": "update_blocks failed"}),
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 def cmd_delete_blocks(args: argparse.Namespace) -> None:
     tz = pytz.timezone(args.timezone)
-    start_ts = int(parse_date(args.start_date, tz).timestamp())
-    end_ts = int(parse_date(args.end_date, tz).timestamp())
-
-    engine = get_engine()
-    with Session(engine) as session:
-        result = session.execute(
-            delete(Block).where(Block.date >= start_ts, Block.date < end_ts)
-        )
-        session.commit()
-
-    print(json.dumps({"status": "ok", "deleted": result.rowcount}))
+    start = parse_date(args.start_date, tz)
+    end = parse_date(args.end_date, tz)
+    service = BlockService(get_engine())
+    deleted = service.delete_blocks(start, end)
+    print(json.dumps({"status": "ok", "deleted": deleted}))
 
 
 def cmd_get_daily_summary(args: argparse.Namespace) -> None:
     tz = pytz.timezone(args.timezone)
-    start_ts = int(parse_date(args.start_date, tz).timestamp())
-    end_ts = int(parse_date(args.end_date, tz).timestamp())
+    start = parse_date(args.start_date, tz)
+    end = parse_date(args.end_date, tz)
+    service = BlockService(get_engine())
+    blocks = service.get_blocks(start, end)
 
-    engine = get_engine()
-    with Session(engine) as session:
-        blocks = (
-            session.query(Block)
-            .filter(Block.date >= start_ts, Block.date < end_ts)
-            .order_by(Block.date)
-            .all()
+    summary: Dict[str, List[Dict[str, Any]]] = {}
+    for b in blocks:
+        dt = datetime.fromtimestamp(b.date, tz=tz)
+        day_str = dt.strftime("%Y-%m-%d")
+        if day_str not in summary:
+            summary[day_str] = []
+        summary[day_str].append(
+            {
+                "time": dt.strftime("%H:%M"),
+                "type_uid": b.type_.uid if b.type_ else None,
+                "type": b.type_.name if b.type_ else None,
+                "project_uid": b.project.uid if b.project else None,
+                "project": b.project.name if b.project else None,
+                "comment": b.comment or "",
+            }
         )
-
-        summary: Dict[str, List[Dict[str, Any]]] = {}
-        for b in blocks:
-            dt = datetime.fromtimestamp(b.date, tz=tz)
-            day_str = dt.strftime("%Y-%m-%d")
-            if day_str not in summary:
-                summary[day_str] = []
-            summary[day_str].append(
-                {
-                    "time": dt.strftime("%H:%M"),
-                    "type_uid": b.type_uid,
-                    "type": b.type_.name if b.type_ else None,
-                    "project_uid": b.project_uid,
-                    "project": b.project.name if b.project else None,
-                    "comment": b.comment or "",
-                }
-            )
 
     print(json.dumps(summary, indent=2))
 
 
 def cmd_get_active_days(args: argparse.Namespace) -> None:
     tz = pytz.timezone(args.timezone)
-    start_ts = int(parse_date(args.start_date, tz).timestamp())
-    end_ts = int(parse_date(args.end_date, tz).timestamp())
+    start = parse_date(args.start_date, tz)
+    end = parse_date(args.end_date, tz)
+    service = BlockService(get_engine())
+    blocks = service.get_blocks(start, end)
 
-    engine = get_engine()
-    with Session(engine) as session:
-        query = session.query(Block).filter(
-            Block.date >= start_ts, Block.date < end_ts
-        )
-        if args.type_uid is not None:
-            query = query.filter(Block.type_uid == args.type_uid)
-
-        blocks = query.order_by(Block.date).all()
-
-        days = set()
-        for b in blocks:
-            dt = datetime.fromtimestamp(b.date, tz=tz)
-            days.add(dt.strftime("%Y-%m-%d"))
+    days: set[str] = set()
+    for b in blocks:
+        if args.type_uid is not None and b.type_ and b.type_.uid != args.type_uid:
+            continue
+        dt = datetime.fromtimestamp(b.date, tz=tz)
+        days.add(dt.strftime("%Y-%m-%d"))
 
     print(json.dumps(sorted(days), indent=2))
 
 
 def cmd_get_stats(args: argparse.Namespace) -> None:
     tz = pytz.timezone(args.timezone)
-    start_ts = int(parse_date(args.start_date, tz).timestamp())
-    end_ts = int(parse_date(args.end_date, tz).timestamp())
+    start = parse_date(args.start_date, tz)
+    end = parse_date(args.end_date, tz)
+    service = BlockService(get_engine())
+    blocks = service.get_blocks(start, end)
 
-    engine = get_engine()
-    with Session(engine) as session:
-        query = session.query(Block).filter(
-            Block.date >= start_ts, Block.date < end_ts
-        )
-        if args.type_uids:
-            query = query.filter(Block.type_uid.in_(args.type_uids))
-
-        blocks = query.all()
-
-        stats: Dict[tuple, Dict[str, Any]] = {}
-        for b in blocks:
-            key = (b.type_uid, b.project_uid)
-            if key not in stats:
-                stats[key] = {
-                    "type_uid": b.type_uid,
-                    "type": b.type_.name if b.type_ else None,
-                    "project_uid": b.project_uid,
-                    "project": b.project.name if b.project else None,
-                    "blocks": 0,
-                    "hours": 0.0,
-                }
-            stats[key]["blocks"] += 1
-            stats[key]["hours"] = round(stats[key]["blocks"] * 0.25, 2)
+    stats: Dict[tuple, Dict[str, Any]] = {}
+    for b in blocks:
+        type_uid = b.type_.uid if b.type_ else None
+        project_uid = b.project.uid if b.project else None
+        if args.type_uids and type_uid not in args.type_uids:
+            continue
+        key = (type_uid, project_uid)
+        if key not in stats:
+            stats[key] = {
+                "type_uid": type_uid,
+                "type": b.type_.name if b.type_ else None,
+                "project_uid": project_uid,
+                "project": b.project.name if b.project else None,
+                "blocks": 0,
+                "hours": 0.0,
+            }
+        stats[key]["blocks"] += 1
+        stats[key]["hours"] = round(stats[key]["blocks"] * 0.25, 2)
 
     result = sorted(stats.values(), key=lambda x: -x["hours"])
     print(json.dumps(result, indent=2))
@@ -353,6 +345,7 @@ def cmd_get_stats(args: argparse.Namespace) -> None:
 # ---------------------------------------------------------------------------
 # Argument parser
 # ---------------------------------------------------------------------------
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(

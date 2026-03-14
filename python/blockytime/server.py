@@ -14,21 +14,21 @@ from sqlalchemy.exc import OperationalError
 from .interfaces.blockserviceinterface import BlockServiceInterface
 from .interfaces.configdict import ConfigDict
 from .interfaces.configserviceinterface import ConfigServiceInterface
+from .interfaces.sleepserviceinterface import SleepServiceInterface
 from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .interfaces.trendserviceinterface import TrendServiceInterface
 from .interfaces.typeserviceinterface import TypeServiceInterface
-from .interfaces.sleepserviceinterface import SleepServiceInterface
 from .log import ColoredFormatter
 from .paths import DATA_PATH, DB_PATH, LOG_PATH
-from .routes import admin, blocks, configs, stats, trends, types, sleeps
+from .routes import admin, blocks, configs, sleeps, stats, trends, types
 from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
 from .services.di import FlaskWithServiceProvider, ServiceProvider
+from .services.sleepservice import SleepService
 from .services.statisticsservice import StatisticsService
 from .services.trendservice import TrendService
 from .services.typeservice import TypeService
-from .services.sleepservice import SleepService
 
 # Configure logging
 logging.basicConfig(
@@ -168,7 +168,6 @@ def create_app() -> Flask:
     def index() -> FlaskResponse:
         """Serve index.html"""
         return send_from_directory("data/static", "index.html")
-
 
     return app
 
