@@ -5,7 +5,7 @@ import shutil
 import sys
 import tempfile
 
-from python.blockytime.backup import cleanup_overflow, rotate_backups
+from blockytime.backup import cleanup_overflow, rotate_backups
 
 BUNDLE_ID = "com.anniapp.Timeblocks"
 DB_FILENAME = "DB.db"
@@ -25,14 +25,18 @@ def main() -> None:
     try:
         lockdown = create_using_usbmux()
     except Exception as e:
-        print(f"Error: Could not connect to device. Is an iPhone connected and trusted?\n{e}")
+        print(
+            f"Error: Could not connect to device. Is an iPhone connected and trusted?\n{e}"
+        )
         sys.exit(1)
 
     print(f"Connected to {lockdown.display_name} (iOS {lockdown.product_version})")
     print(f"Accessing app container for {BUNDLE_ID}...")
 
     try:
-        service = HouseArrestService(lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True)
+        service = HouseArrestService(
+            lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True
+        )
     except Exception as e:
         print(f"Error: Could not access app container for {BUNDLE_ID}.\n{e}")
         sys.exit(1)

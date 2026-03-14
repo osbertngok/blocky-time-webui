@@ -64,6 +64,10 @@ ignore_missing_imports = true
 module = "flask_swagger_ui.*"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "pymobiledevice3.*"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = "--capture=no"
 log_cli = "true"

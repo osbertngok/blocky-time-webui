@@ -30,13 +30,23 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
             from pymobiledevice3.lockdown import create_using_usbmux
             from pymobiledevice3.services.house_arrest import HouseArrestService
         except ImportError:
-            return jsonify({"status": "error", "message": "pymobiledevice3 is not installed. Run 'make build' first."}), 500
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "pymobiledevice3 is not installed. Run 'make build' first.",
+                    }
+                ),
+                500,
+            )
 
         log.info("pull-db: connecting to USB device...")
         try:
             lockdown = create_using_usbmux()
         except Exception as e:
-            msg = f"Could not connect to device. Is an iPhone connected and trusted? {e}"
+            msg = (
+                f"Could not connect to device. Is an iPhone connected and trusted? {e}"
+            )
             log.warning(f"pull-db: {msg}")
             return jsonify({"status": "error", "message": msg}), 503
 
@@ -45,7 +55,9 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         log.info(f"pull-db: connected to {device_name} (iOS {ios_version})")
 
         try:
-            service = HouseArrestService(lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True)
+            service = HouseArrestService(
+                lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True
+            )
         except Exception as e:
             msg = f"Could not access app container for {BUNDLE_ID}: {e}"
             log.warning(f"pull-db: {msg}")
@@ -82,11 +94,13 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         engine.dispose()
         log.info("pull-db: connection pool disposed, fresh connections will use new DB")
 
-        return jsonify({
-            "status": "success",
-            "device": f"{device_name} (iOS {ios_version})",
-            "size_kb": round(size_kb, 1),
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "device": f"{device_name} (iOS {ios_version})",
+                "size_kb": round(size_kb, 1),
+            }
+        )
 
     @bp.route("/api/v1/admin/push-db", methods=["POST"])
     def push_db() -> RouteReturn:
@@ -97,19 +111,37 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         BLOCKY_MAX_PUSH_BACKUPS env var, default 10).
         """
         if not os.path.exists(OUTPUT_PATH):
-            return jsonify({"status": "error", "message": f"Local DB not found at {OUTPUT_PATH}"}), 400
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": f"Local DB not found at {OUTPUT_PATH}",
+                    }
+                ),
+                400,
+            )
 
         try:
             from pymobiledevice3.lockdown import create_using_usbmux
             from pymobiledevice3.services.house_arrest import HouseArrestService
         except ImportError:
-            return jsonify({"status": "error", "message": "pymobiledevice3 is not installed. Run 'make build' first."}), 500
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "pymobiledevice3 is not installed. Run 'make build' first.",
+                    }
+                ),
+                500,
+            )
 
         log.info("push-db: connecting to USB device...")
         try:
             lockdown = create_using_usbmux()
         except Exception as e:
-            msg = f"Could not connect to device. Is an iPhone connected and trusted? {e}"
+            msg = (
+                f"Could not connect to device. Is an iPhone connected and trusted? {e}"
+            )
             log.warning(f"push-db: {msg}")
             return jsonify({"status": "error", "message": msg}), 503
 
@@ -118,7 +150,9 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         log.info(f"push-db: connected to {device_name} (iOS {ios_version})")
 
         try:
-            service = HouseArrestService(lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True)
+            service = HouseArrestService(
+                lockdown=lockdown, bundle_id=BUNDLE_ID, documents_only=True
+            )
         except Exception as e:
             msg = f"Could not access app container for {BUNDLE_ID}: {e}"
             log.warning(f"push-db: {msg}")
@@ -157,10 +191,12 @@ def create_admin_blueprint(engine: Engine) -> Blueprint:
         size_kb = os.path.getsize(OUTPUT_PATH) / 1024
         log.info(f"push-db: pushed {size_kb:.1f} KB to {device_name}")
 
-        return jsonify({
-            "status": "success",
-            "device": f"{device_name} (iOS {ios_version})",
-            "size_kb": round(size_kb, 1),
-        })
+        return jsonify(
+            {
+                "status": "success",
+                "device": f"{device_name} (iOS {ios_version})",
+                "size_kb": round(size_kb, 1),
+            }
+        )
 
     return bp

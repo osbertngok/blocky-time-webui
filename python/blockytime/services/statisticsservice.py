@@ -1,5 +1,5 @@
-from datetime import datetime, date
-from typing import List, Optional, Dict, cast
+from datetime import date, datetime
+from typing import Dict, List, Optional, cast
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, text
@@ -31,40 +31,39 @@ class StatisticsService(StatisticsServiceInterface):
         time_slot_minutes: int = 30,
         hour: Optional[int] = None,
         minute: Optional[int] = None,
-        day_of_week: Optional[int] = None
+        day_of_week: Optional[int] = None,
     ) -> List[StatisticsDTO]:
         if time_slot_minutes not in (15, 30):
             raise ValueError("time_slot_minutes must be either 15 or 30")
-        
+
         # Only validate minute if it's provided
         if minute is not None:
             if minute % time_slot_minutes != 0:
-                raise ValueError(f"minute must be a multiple of {time_slot_minutes}. currently it is {minute}")
+                raise ValueError(
+                    f"minute must be a multiple of {time_slot_minutes}. currently it is {minute}"
+                )
 
         with Session(self._engine) as session:
-            query = session.query(
-                Block.type_uid,
-                func.count(Block.uid).label('count')
-            )
+            query = session.query(Block.type_uid, func.count(Block.uid).label("count"))
 
             # Add time slot filtering if specified
             if hour is not None:
                 # Adjust for HK timezone (UTC+8)
                 query = query.filter(
                     func.strftime(
-                        '%H',
-                        func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
-                    ) == str(hour).zfill(2)
+                        "%H", func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                    )
+                    == str(hour).zfill(2)
                 )
-                
+
                 if minute is not None:
                     query = query.filter(
                         func.strftime(
-                            '%M', 
-                            func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                            "%M",
+                            func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch"),
                         ).between(
                             str(minute).zfill(2),
-                            str(minute + time_slot_minutes - 1).zfill(2)
+                            str(minute + time_slot_minutes - 1).zfill(2),
                         )
                     )
 
@@ -72,15 +71,17 @@ class StatisticsService(StatisticsServiceInterface):
             if day_of_week is not None:
                 query = query.filter(
                     func.strftime(
-                        '%w',
-                        func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
-                    ) == str(day_of_week)
+                        "%w", func.datetime(Block.date + SERVER_TZ_OFFSET, "unixepoch")
+                    )
+                    == str(day_of_week)
                 )
 
             # Base time filtering
             query = query.filter(
-                Block.date >= int(datetime.combine(start_date, datetime.min.time()).timestamp()),
-                Block.date < int(datetime.combine(end_date, datetime.min.time()).timestamp())
+                Block.date
+                >= int(datetime.combine(start_date, datetime.min.time()).timestamp()),
+                Block.date
+                < int(datetime.combine(end_date, datetime.min.time()).timestamp()),
             )
 
             # Type filtering
@@ -94,20 +95,34 @@ class StatisticsService(StatisticsServiceInterface):
             query = query.order_by(text("count DESC"))
 
             # Print the SQL query
-            print("Generated SQL:", str(query.statement.compile(compile_kwargs={"literal_binds": True})))
-            print("Parameters:", {
-                "start_date": start_date,
-                "end_date": end_date,
-                "hour": hour,
-                "minute": minute,
-                "time_slot_minutes": time_slot_minutes,
-                "day_of_week": day_of_week
-            })
+            print(
+                "Generated SQL:",
+                str(query.statement.compile(compile_kwargs={"literal_binds": True})),
+            )
+            print(
+                "Parameters:",
+                {
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "hour": hour,
+                    "minute": minute,
+                    "time_slot_minutes": time_slot_minutes,
+                    "day_of_week": day_of_week,
+                },
+            )
 
             # Get types
             type_dict: Dict[int, TypeDTO] = {
-                t.uid: TypeDTO(uid=t.uid, name=t.name, color=t.color, hidden=t.hidden, priority=t.priority)
-                for t in session.query(Type.uid, Type.name, Type.color, Type.hidden, Type.priority).all()
+                t.uid: TypeDTO(
+                    uid=t.uid,
+                    name=t.name,
+                    color=t.color,
+                    hidden=t.hidden,
+                    priority=t.priority,
+                )
+                for t in session.query(
+                    Type.uid, Type.name, Type.color, Type.hidden, Type.priority
+                ).all()
             }
 
             # Convert to DTOs
@@ -117,7 +132,8 @@ class StatisticsService(StatisticsServiceInterface):
                     results.append(
                         StatisticsDTO(
                             type_=type_dict[row.type_uid],
-                            duration=cast(float, row.count) * 0.25  # Each block is 15 minutes
+                            duration=cast(float, row.count)
+                            * 0.25,  # Each block is 15 minutes
                         )
                     )
 
