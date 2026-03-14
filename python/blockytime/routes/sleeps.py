@@ -31,7 +31,7 @@ def get_sleep_stats(sleep_service: SleepServiceInterface) -> RouteReturn:
         start_date=start_date,
         end_date=end_date,
         cut_off_hour=18,
-        timezone=pytz.timezone("Asia/Shanghai"),
+        timezone=pytz.timezone("Asia/Hong_Kong"),
         start_time_cut_off_hour=8,
         end_time_cut_off_hour=14,
         filter_start_time_after=20.0,  # 8 PM

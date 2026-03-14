@@ -94,23 +94,6 @@ class StatisticsService(StatisticsServiceInterface):
             # Order by duration
             query = query.order_by(text("count DESC"))
 
-            # Print the SQL query
-            print(
-                "Generated SQL:",
-                str(query.statement.compile(compile_kwargs={"literal_binds": True})),
-            )
-            print(
-                "Parameters:",
-                {
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "hour": hour,
-                    "minute": minute,
-                    "time_slot_minutes": time_slot_minutes,
-                    "day_of_week": day_of_week,
-                },
-            )
-
             # Get types
             type_dict: Dict[int, TypeDTO] = {
                 t.uid: TypeDTO(

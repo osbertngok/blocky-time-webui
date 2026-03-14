@@ -14,8 +14,6 @@ dependencies = [
     "flask-swagger-ui~=4.11.1",
     "sqlalchemy~=2.0.0",
     "python-dotenv~=1.0.0",
-    "requests~=2.31.0",
-    "alembic~=1.13.0",
     "markupsafe~=2.1.0",
     "pytz~=2024.1",
     "numpy~=1.26.0"
@@ -26,7 +24,6 @@ dev = [
     "mypy",
     "pytest",
     "ipython",
-    "types-requests",
     "types-Flask-Cors",
     "types-pytz",
     "ruff",

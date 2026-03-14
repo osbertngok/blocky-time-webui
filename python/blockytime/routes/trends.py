@@ -46,7 +46,7 @@ def get_trends(trend_service: TrendServiceInterface) -> RouteReturn:
             return jsonify({"error": f"Invalid group_by: {group_by}"}), 400
 
         # Parse dates and localize to GMT+8
-        tz = pytz.timezone("Asia/Singapore")
+        tz = pytz.timezone("Asia/Hong_Kong")
         start_date = tz.localize(datetime.strptime(start_date_str, "%Y-%m-%d"))
         end_date = tz.localize(datetime.strptime(end_date_str, "%Y-%m-%d"))
 

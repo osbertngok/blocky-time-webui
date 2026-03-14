@@ -36,7 +36,7 @@ def get_stats(statistics_service: StatisticsServiceInterface) -> RouteReturn:
             return jsonify({"error": "end_date is required"}), 400
 
         # Parse dates and localize to GMT+8
-        tz = pytz.timezone("Asia/Singapore")
+        tz = pytz.timezone("Asia/Hong_Kong")
         start_date = tz.localize(datetime.strptime(start_date_str, "%Y-%m-%d"))
         end_date = tz.localize(datetime.strptime(end_date_str, "%Y-%m-%d"))
 
