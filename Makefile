@@ -63,6 +63,10 @@ usage: check-os
 	@echo "    make push-db"
 	@echo "        \033[90m- push local DB.db to USB-connected iPhone (backs up iPhone DB first) \033[0m"
 	@echo
+	@echo "    make ai-tools ARGS=\"<command> [flags]\""
+	@echo "        \033[90m- run AI-callable CLI tools (get-types, get-projects, get-blocks, set-blocks, ...) \033[0m"
+	@echo "        \033[90m  run with ARGS=\"list-commands\" to see all available commands \033[0m"
+	@echo
 	@echo "    make python"
 	@echo "        \033[90m- run python3 repl \033[0m"
 	@echo
@@ -152,6 +156,12 @@ pull-db:
 .PHONY: push-db
 push-db:
 	@.ve3/bin/python3 -m python.blockytime.scripts.push_db
+
+# AI tool CLI — pass ARGS="<command> [flags]", e.g. make ai-tools ARGS="get-types"
+# Run without ARGS to see usage.
+.PHONY: ai-tools
+ai-tools:
+	@.ve3/bin/python3 -m python.blockytime.scripts.ai_tools $(ARGS)
 
 .PHONY: fe-install
 fe-install:
