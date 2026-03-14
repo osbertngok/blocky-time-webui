@@ -3,6 +3,7 @@ from typing import List, cast
 
 import numpy as np
 import pytz
+from blockytime.constants import DEFAULT_TZ
 from blockytime.models.block import Block
 from blockytime.models.type_ import Type
 from sqlalchemy import func
@@ -16,7 +17,7 @@ from ..interfaces.sleepserviceinterface import SleepServiceInterface
 class SleepService(SleepServiceInterface):
     def __init__(self, engine: Engine):
         self.engine = engine
-        self.timezone = pytz.timezone("Asia/Hong_Kong")
+        self.timezone = pytz.timezone(DEFAULT_TZ)
 
     def _get_date_boundaries(
         self, date_obj: date, cut_off_hour: int, timezone: pytz.BaseTzInfo
@@ -122,7 +123,7 @@ class SleepService(SleepServiceInterface):
         start_date: date,
         end_date: date,
         cut_off_hour: int = 18,
-        timezone: pytz.BaseTzInfo = pytz.timezone("Asia/Hong_Kong"),
+        timezone: pytz.BaseTzInfo = pytz.timezone(DEFAULT_TZ),
         start_time_cut_off_hour: int = 8,
         end_time_cut_off_hour: int = 14,
         filter_start_time_after: float = 20.0,  # 8 PM
@@ -175,7 +176,7 @@ class SleepService(SleepServiceInterface):
         )
 
         # Extract sleep durations
-        sime_day_tuple = [
+        sleep_day_tuple = [
             (
                 stat.date,
                 (
@@ -200,22 +201,22 @@ class SleepService(SleepServiceInterface):
         ]
 
         # Filtering
-        sime_day_tuple = [
+        sleep_day_tuple = [
             (date, start_hour, end_hour, duration)
-            for date, start_hour, end_hour, duration in sime_day_tuple
+            for date, start_hour, end_hour, duration in sleep_day_tuple
             if start_hour > filter_start_time_after
             and end_hour
             > filter_end_time_after  # (20, 31) ~ 8PM - 7AM, (27, 37) ~ 3AM - 1PM
         ]
 
         # Sort by date
-        sime_day_tuple.sort(key=lambda x: x[0])
+        sleep_day_tuple.sort(key=lambda x: x[0])
 
         # Separate dates and hours
-        dates = np.array([x[0] for x in sime_day_tuple])
-        start_hours = np.array([x[1] for x in sime_day_tuple])
-        end_hours = np.array([x[2] for x in sime_day_tuple])
-        durations = np.array([x[3] for x in sime_day_tuple])
+        dates = np.array([x[0] for x in sleep_day_tuple])
+        start_hours = np.array([x[1] for x in sleep_day_tuple])
+        end_hours = np.array([x[2] for x in sleep_day_tuple])
+        durations = np.array([x[3] for x in sleep_day_tuple])
 
         def ewma(data: np.ndarray) -> np.ndarray:
             weights = np.array([decay_factor**i for i in range(window_size)][::-1])

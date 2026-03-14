@@ -20,7 +20,7 @@ class Type(Base):
 
     category = relationship("Category")
 
-    projects = relationship("Project", secondary=Link.__table__)
+    projects = relationship("Project", secondary=Link.__table__, lazy="selectin")
 
     def to_dto(self) -> TypeDTO:
         return TypeDTO(

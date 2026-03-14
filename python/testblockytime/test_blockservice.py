@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List
 
 import pytz
+from blockytime.constants import DEFAULT_TZ
 from blockytime.dtos.block_dto import BlockDTO
 from blockytime.services.blockservice import BlockService
 from pytest import fixture
@@ -26,7 +27,7 @@ class TestBlockService:
 
     def test_get_blocks(self, engine: Engine) -> None:
         # Get blocks from the engine
-        tz = pytz.timezone("Asia/Hong_Kong")
+        tz = pytz.timezone(DEFAULT_TZ)
         start = tz.localize(datetime(2025, 1, 1))  # 2025-01-01 00:00:00 GMT+8
         end = tz.localize(datetime(2025, 1, 2))  # 2025-01-02 00:00:00 GMT+8
         blocks: List[BlockDTO] = BlockService(engine).get_blocks(

@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import pytz
+from blockytime.constants import DEFAULT_TZ
 from blockytime.dtos.block_dto import BlockDTO
 from blockytime.dtos.project_dto import ProjectDTO
 from blockytime.dtos.type_dto import TypeDTO
@@ -31,7 +32,7 @@ from blockytime.services.projectservice import ProjectService
 from blockytime.services.typeservice import TypeService
 from sqlalchemy import create_engine
 
-DEFAULT_TIMEZONE = "Asia/Hong_Kong"
+DEFAULT_TIMEZONE = DEFAULT_TZ
 
 COMMANDS_DESCRIPTION = [
     {
@@ -431,7 +432,11 @@ def main() -> None:
     if handler is None:
         parser.print_help()
         sys.exit(1)
-    handler(args)
+    try:
+        handler(args)
+    except Exception as e:
+        print(json.dumps({"status": "error", "message": str(e)}), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

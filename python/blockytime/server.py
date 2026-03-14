@@ -13,6 +13,7 @@ from sqlalchemy.exc import OperationalError
 from .interfaces.blockserviceinterface import BlockServiceInterface
 from .interfaces.configdict import ConfigDict
 from .interfaces.configserviceinterface import ConfigServiceInterface
+from .interfaces.projectserviceinterface import ProjectServiceInterface
 from .interfaces.sleepserviceinterface import SleepServiceInterface
 from .interfaces.statisticsserviceinterface import StatisticsServiceInterface
 from .interfaces.trendserviceinterface import TrendServiceInterface
@@ -24,6 +25,7 @@ from .routes.decorators import RouteReturn
 from .services.blockservice import BlockService
 from .services.configservice import ConfigService
 from .services.di import FlaskWithServiceProvider, ServiceProvider
+from .services.projectservice import ProjectService
 from .services.sleepservice import SleepService
 from .services.statisticsservice import StatisticsService
 from .services.trendservice import TrendService
@@ -134,12 +136,14 @@ def create_app() -> Flask:
 
     app = FlaskWithServiceProvider(__name__, service_provider=service_provider)
     load_config(app)
-    service_provider.register(BlockServiceInterface, BlockService(engine))  # type: ignore
-    service_provider.register(TypeServiceInterface, TypeService(engine))  # type: ignore
-    service_provider.register(ConfigServiceInterface, ConfigService(engine))  # type: ignore
-    service_provider.register(StatisticsServiceInterface, StatisticsService(engine))  # type: ignore
-    service_provider.register(TrendServiceInterface, TrendService(engine))  # type: ignore
-    service_provider.register(SleepServiceInterface, SleepService(engine))  # type: ignore
+    # Protocol interfaces cannot be used as Type[T] — structural subtyping is verified at call sites
+    service_provider.register(BlockServiceInterface, BlockService(engine))  # type: ignore[type-abstract]
+    service_provider.register(TypeServiceInterface, TypeService(engine))  # type: ignore[type-abstract]
+    service_provider.register(ProjectServiceInterface, ProjectService(engine))  # type: ignore[type-abstract]
+    service_provider.register(ConfigServiceInterface, ConfigService(engine))  # type: ignore[type-abstract]
+    service_provider.register(StatisticsServiceInterface, StatisticsService(engine))  # type: ignore[type-abstract]
+    service_provider.register(TrendServiceInterface, TrendService(engine))  # type: ignore[type-abstract]
+    service_provider.register(SleepServiceInterface, SleepService(engine))  # type: ignore[type-abstract]
     service_provider.register(ConfigDict, app.config)
 
     # Define static file routes
