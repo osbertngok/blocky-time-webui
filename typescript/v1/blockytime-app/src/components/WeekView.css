@@ -1,0 +1,248 @@
+.week-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: #f5f5f5;
+  user-select: none;
+}
+
+/* Toolbar */
+.wv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.wv-nav-btn {
+  padding: 4px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.wv-nav-btn:hover {
+  background: #f0f0f0;
+}
+
+.wv-today-btn {
+  font-weight: bold;
+}
+
+.wv-week-label {
+  font-size: 13px;
+  color: #555;
+  flex: 1;
+  text-align: center;
+  min-width: 120px;
+}
+
+.wv-zoom-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.wv-zoom-slider {
+  width: 80px;
+  cursor: pointer;
+}
+
+.wv-zoom-value {
+  font-size: 11px;
+  color: #999;
+  min-width: 32px;
+}
+
+/* Grid wrapper: sticky header + scrollable body */
+.wv-grid-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Sticky header row */
+.wv-header-row {
+  display: grid;
+  grid-template-columns: 54px repeat(7, 1fr);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  border-bottom: 2px solid #ccc;
+  flex-shrink: 0;
+}
+
+.wv-corner {
+  border-right: 1px solid #ddd;
+}
+
+.wv-day-header {
+  padding: 4px 2px;
+  text-align: center;
+  border-right: 1px solid #eee;
+  cursor: default;
+}
+
+.wv-day-header:last-child {
+  border-right: none;
+}
+
+.wv-day-header.is-today {
+  background: #e3f2fd;
+}
+
+.wv-day-name {
+  font-size: 11px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.wv-day-date {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.wv-day-header.is-today .wv-day-date {
+  color: #1976d2;
+}
+
+/* Scrollable body */
+.wv-body {
+  display: grid;
+  grid-template-columns: 54px repeat(7, 1fr);
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Hour label column */
+.wv-labels-col {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: #fafafa;
+  border-right: 1px solid #ccc;
+}
+
+.wv-hour-label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding-right: 4px;
+  font-size: 9px;
+  color: #999;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.wv-hour-label span {
+  margin-top: -5px; /* hang the label above the line */
+}
+
+/* Day columns */
+.wv-day-col {
+  border-right: 1px solid #eee;
+}
+
+.wv-day-col:last-child {
+  border-right: none;
+}
+
+/* Individual cell */
+.wv-cell {
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom: 1px solid #f0f0f0;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wv-cell.has-data {
+  border-bottom-color: rgba(0,0,0,0.05);
+}
+
+.wv-block-text {
+  font-size: 9px;
+  font-weight: bold;
+  color: rgba(0,0,0,0.7);
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 2px;
+}
+
+.wv-block-info {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 160px;
+  min-height: 60px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 6px;
+  z-index: 30;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.wv-cell:hover .wv-block-info {
+  display: block;
+}
+
+/* Selection overlay (reused pattern) */
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(33, 150, 243, 0.35);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Current time indicator */
+.wv-time-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: red;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.wv-time-indicator::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  background: red;
+  border-radius: 50%;
+}

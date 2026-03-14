@@ -1,7 +1,52 @@
 .main-ui {
   display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+
+.view-toggle-bar {
+  display: flex;
+  gap: 0;
+  padding: 6px 10px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.view-toggle-btn {
+  padding: 4px 14px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.view-toggle-btn:first-child {
+  border-radius: 4px 0 0 4px;
+}
+
+.view-toggle-btn:last-child {
+  border-radius: 0 4px 4px 0;
+  border-left: none;
+}
+
+.view-toggle-btn.active {
+  background: #1976d2;
+  color: white;
+  border-color: #1565c0;
+}
+
+.view-toggle-btn:hover:not(.active) {
+  background: #e8e8e8;
+}
+
+/* Main content row: timetable + type selector side by side */
+.main-ui-content {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
@@ -11,30 +56,41 @@
   padding: 10px;
 }
 
+.time-table-container.week-view-container {
+  padding: 0;
+  overflow: hidden;
+}
+
 .type-selector-container {
   flex: 1;
   min-width: 250px;
   max-width: 350px;
   padding: 10px;
   overflow-y: auto;
+  border-left: 1px solid #ddd;
 }
 
 @media (max-width: 768px) {
-  .main-ui {
+  .main-ui-content {
     flex-direction: column;
   }
-  
+
+  .view-toggle-bar {
+    display: none; /* hide on mobile; scroll view is default */
+  }
+
   .time-table-container,
   .type-selector-container {
     flex: none;
     width: 100%;
     max-width: none;
+    border-left: none;
   }
-  
+
   .time-table-container {
     height: 70%;
   }
-  
+
   .type-selector-container {
     height: 30%;
   }
