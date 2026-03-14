@@ -14,7 +14,6 @@ from ..interfaces.sleepserviceinterface import SleepServiceInterface
 
 
 class SleepService(SleepServiceInterface):
-
     def __init__(self, engine: Engine):
         self.engine = engine
         self.timezone = pytz.timezone("Asia/Shanghai")
@@ -68,7 +67,6 @@ class SleepService(SleepServiceInterface):
         timezone: pytz.BaseTzInfo,
     ) -> list[SleepStatsDTO]:
         with Session(self.engine) as session:
-
             # Calculate the Unix epoch timestamps for the boundaries
             start_timestamp, _ = self._get_date_boundaries(
                 start_date, cut_off_hour, timezone

@@ -5,7 +5,6 @@ from ..dtos.statistics_dto import StatisticsDTO
 
 
 class StatisticsServiceInterface(Protocol):
-
     def get_statistics(
         self,
         start_date: date,

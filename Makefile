@@ -51,6 +51,15 @@ usage: check-os
 	@echo "    make run"
 	@echo "        \033[90m- run server \033[0m"
 	@echo
+	@echo "    make lint"
+	@echo "        \033[90m- auto-fix style issues and format with ruff \033[0m"
+	@echo
+	@echo "    make check"
+	@echo "        \033[90m- run mypy (type check) + ruff check (lint) \033[0m"
+	@echo
+	@echo "    make install-hooks"
+	@echo "        \033[90m- install pre-commit hooks (ruff + mypy on every commit) \033[0m"
+	@echo
 	@echo "    make test-list"
 	@echo "        \033[90m- list all available tests \033[0m"
 	@echo
@@ -87,9 +96,12 @@ build-python-env: .ve3/bin/python3
 	mkdir -p .ve3/lib/python$$PYTHON_VERSION/site-packages; \
 	echo "$(shell pwd)/python" > .ve3/lib/python$$PYTHON_VERSION/site-packages/on.pth
 
+.PHONY: install-hooks
+install-hooks:
+	@.ve3/bin/pre-commit install
 
 .PHONY: build
-build: build-python-env
+build: build-python-env install-hooks
 
 
 .PHONY: run
@@ -122,17 +134,20 @@ else
 endif
 
 .PHONY: check
-check: check-mypy-py3
+check: check-mypy-py3 check-ruff
 
 .PHONY: check-mypy-py3
 check-mypy-py3:
 	@.ve3/bin/python3 -m mypy
 
+.PHONY: check-ruff
+check-ruff:
+	@.ve3/bin/ruff check python/
+
 .PHONY: lint
 lint:
-	@.ve3/bin/python3 -m autoflake --in-place --recursive --remove-all-unused-imports python/
-	@.ve3/bin/python3 -m isort python/
-	@.ve3/bin/python3 -m black python/
+	@.ve3/bin/ruff check --fix python/
+	@.ve3/bin/ruff format python/
 
 .PHONY: python
 python:

@@ -29,9 +29,8 @@ dev = [
     "types-requests",
     "types-Flask-Cors",
     "types-pytz",
-    "isort",
-    "autoflake",
-    "black",
+    "ruff",
+    "pre-commit",
     "pymobiledevice3"
 ]
 
@@ -74,3 +73,20 @@ log_cli = "true"
 log_cli_level = "debug"
 log_format = "%(asctime)s.%(msecs)03d %(name)s [%(levelname)s] [%(filename)s:%(lineno)s %(funcName)s] %(message)s"
 log_date_format = "%Y-%m-%dT%H:%M:%S"
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+# E/W: pycodestyle  F: pyflakes  I: isort
+select = ["E", "F", "I", "W"]
+ignore = [
+    "E501",  # line-too-long — handled by ruff format
+]
+
+[tool.ruff.format]
+# Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
