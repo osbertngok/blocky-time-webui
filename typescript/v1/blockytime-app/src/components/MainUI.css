@@ -72,6 +72,16 @@
   cursor: not-allowed;
 }
 
+.sync-btn-push {
+  border-color: #e65100;
+  color: #e65100;
+}
+
+.sync-btn-push:hover:not(:disabled) {
+  background: #e65100;
+  color: #fff;
+}
+
 .view-toggle-btn.active {
   background: #1976d2;
   color: white;

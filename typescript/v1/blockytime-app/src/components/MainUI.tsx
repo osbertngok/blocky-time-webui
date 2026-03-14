@@ -32,7 +32,8 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
   const weekViewRef = useRef<{ goToCurrentWeek: () => void }>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPulling, setIsPulling] = useState(false);
-  const [pullStatus, setPullStatus] = useState<string | null>(null);
+  const [isPushing, setIsPushing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [config, setConfig] = useState<BlockyTimeConfig>({
     mainTimePrecision: "QUARTER_HOUR",
     disablePixelate: false,
@@ -202,20 +203,38 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
 
   const handlePullDb = async () => {
     setIsPulling(true);
-    setPullStatus(null);
+    setSyncStatus(null);
     try {
       const result = await adminService.pullDb();
       if (result.status === 'success') {
-        setPullStatus(`Synced ${result.size_kb} KB from ${result.device}`);
+        setSyncStatus(`Pulled ${result.size_kb} KB from ${result.device}`);
         dispatch(triggerRefresh());
       } else {
-        setPullStatus(`Error: ${result.message}`);
+        setSyncStatus(`Error: ${result.message}`);
       }
     } catch {
-      setPullStatus('Error: request failed');
+      setSyncStatus('Error: request failed');
     } finally {
       setIsPulling(false);
-      setTimeout(() => setPullStatus(null), 5000);
+      setTimeout(() => setSyncStatus(null), 5000);
+    }
+  };
+
+  const handlePushDb = async () => {
+    setIsPushing(true);
+    setSyncStatus(null);
+    try {
+      const result = await adminService.pushDb();
+      if (result.status === 'success') {
+        setSyncStatus(`Pushed ${result.size_kb} KB to ${result.device}`);
+      } else {
+        setSyncStatus(`Error: ${result.message}`);
+      }
+    } catch {
+      setSyncStatus('Error: request failed');
+    } finally {
+      setIsPushing(false);
+      setTimeout(() => setSyncStatus(null), 5000);
     }
   };
 
@@ -243,13 +262,20 @@ export const MainUI = forwardRef<{ scrollToCurrentTime: () => void }, MainUIProp
           Scroll View
         </button>
         <div className="sync-controls">
-          {pullStatus && <span className="sync-status">{pullStatus}</span>}
+          {syncStatus && <span className="sync-status">{syncStatus}</span>}
           <button
             className="sync-btn"
             onClick={handlePullDb}
-            disabled={isPulling}
+            disabled={isPulling || isPushing}
           >
-            {isPulling ? 'Syncing...' : 'Sync from iPhone'}
+            {isPulling ? 'Pulling...' : 'Pull from iPhone'}
+          </button>
+          <button
+            className="sync-btn sync-btn-push"
+            onClick={handlePushDb}
+            disabled={isPulling || isPushing}
+          >
+            {isPushing ? 'Pushing...' : 'Push to iPhone'}
           </button>
         </div>
       </div>
